@@ -392,7 +392,7 @@ Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](L
 ## 👨‍💻 Autor
 
 **Pedro Lucas Marschhausen de Abreu**
-- 💼 **LinkedIn**: [Pedro Marsch](https://linkedin.com/in/pedro-marschhausen)
+- 💼 **LinkedIn**: [Pedro Marsch](https://www.linkedin.com/in/pedro-marschhausen-2756891b3/)
 - 📧 **Email**: pedroabreu6497@gmail.com
 - 🌐 **Portfolio**: [pedromarsch.dev](https://pedromarsch.dev)
 
