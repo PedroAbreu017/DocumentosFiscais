@@ -19,15 +19,6 @@
 ![Upload](docs/screenshots/upload.png)
 *Página de Upload*
 
-### 📱 Interface Mobile
-<div align="center">
-  <img src="docs/screenshots/mobile-menu.png" alt="Menu Mobile" width="250">
-  <img src="docs/screenshots/mobile-upload.png" alt="Upload Mobile" width="250">
-  <img src="docs/screenshots/mobile-list.png" alt="Lista Mobile" width="250">
-</div>
-
-*Interface otimizada para dispositivos móveis com navegação por gestos*
-
 ## ✨ Funcionalidades
 
 ### 🎯 **Core Features**
