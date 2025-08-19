@@ -392,8 +392,8 @@ Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](L
 ## 👨‍💻 Autor
 
 **Pedro Lucas Marschhausen de Abreu**
-- 💼 **LinkedIn**: [Pedro Marsch](https://linkedin.com/in/pedro-marsch)
-- 📧 **Email**: pedro@pedromarsch.dev
+- 💼 **LinkedIn**: [Pedro Marsch](https://linkedin.com/in/pedro-marschhausen)
+- 📧 **Email**: pedroabreu6497@gmail.com
 - 🌐 **Portfolio**: [pedromarsch.dev](https://pedromarsch.dev)
 
 ---
@@ -417,7 +417,5 @@ Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](L
 **⭐ Se este projeto foi útil, considere dar uma estrela no repositório!**
 
 [![GitHub stars](https://img.shields.io/github/stars/PedroMarsch/DocumentosFiscais.svg?style=social&label=Star)](https://github.com/PedroMarsch/DocumentosFiscais)
-
-*Construído com ❤️ e .NET 8*
 
 </div>
