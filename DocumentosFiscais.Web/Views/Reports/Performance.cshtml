@@ -1,0 +1,895 @@
+@{
+    ViewData["Title"] = "Performance do Sistema";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Header da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 text-gray-800 mb-0">⚡ Performance do Sistema</h1>
+            <p class="text-muted">Monitoramento em tempo real da performance e métricas do sistema</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary me-2" onclick="refreshData()">
+                <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+            <button class="btn btn-success" onclick="exportReport()">
+                <i class="bi bi-download"></i> Relatório
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2 text-muted">Carregando métricas do sistema...</p>
+    </div>
+
+    <!-- Status Geral -->
+    <div class="row mb-4" id="performanceContent">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="bi bi-activity"></i> Status Geral do Sistema
+                        <span id="systemStatus" class="badge bg-success ms-2">Online</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <div class="h2 text-success mb-0" id="uptime">Carregando...</div>
+                                <small class="text-muted">Uptime</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <div class="h2 text-primary mb-0" id="responseTime">Carregando...</div>
+                                <small class="text-muted">Tempo Resposta</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <div class="h2 text-warning mb-0" id="throughput">Carregando...</div>
+                                <small class="text-muted">Throughput</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <div class="h2 text-info mb-0" id="errorRate">Carregando...</div>
+                                <small class="text-muted">Taxa de Erro</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas de Sistema -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-cpu"></i> CPU
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span>Uso Atual</span>
+                        <strong id="cpuUsage">--%</strong>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="cpuProgressBar"></div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> Média últimas 24h: <span id="cpuAverage">--%</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card border-left-info shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="bi bi-memory"></i> Memória
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span>Uso Atual</span>
+                        <strong id="memoryUsage">-- / --</strong>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: 0%" id="memoryProgressBar"></div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> GC Collections: <span id="gcCollections">--</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="bi bi-hdd"></i> Armazenamento
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span>Uso Atual</span>
+                        <strong id="diskUsage">-- / --</strong>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 0%" id="diskProgressBar"></div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> I/O Rate: <span id="ioRate">--</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de Performance -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-graph-up"></i> Tempo de Resposta (Últimas 24h)
+                    </h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="timeRange" id="range1h" value="1h">
+                        <label class="btn btn-outline-primary" for="range1h">1h</label>
+                        
+                        <input type="radio" class="btn-check" name="timeRange" id="range6h" value="6h">
+                        <label class="btn btn-outline-primary" for="range6h">6h</label>
+                        
+                        <input type="radio" class="btn-check" name="timeRange" id="range24h" value="24h" checked>
+                        <label class="btn btn-outline-primary" for="range24h">24h</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-pie-chart"></i> Distribuição de Requests
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="requestDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance de APIs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-speedometer2"></i> Performance de APIs
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Requests/min</th>
+                                    <th>Tempo Médio</th>
+                                    <th>Taxa Sucesso</th>
+                                    <th>P95</th>
+                                    <th>P99</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="apiPerformanceTable">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">Carregando dados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas de Banco e Cache -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-database"></i> Performance do Banco
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Conexões Ativas:</strong>
+                            <span id="activeConnections" class="float-end">--</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Pool Size:</strong>
+                            <span id="poolSize" class="float-end">--</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Avg Query Time:</strong>
+                            <span id="avgQueryTime" class="float-end">--ms</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Deadlocks:</strong>
+                            <span id="deadlocks" class="float-end">--</span>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%" id="dbConnectionProgress">
+                        </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Utilização do pool de conexões</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-lightning"></i> Cache Performance
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Hit Rate:</strong>
+                            <span id="cacheHitRate" class="float-end text-success">--%</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Miss Rate:</strong>
+                            <span id="cacheMissRate" class="float-end text-warning">--%</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Entries:</strong>
+                            <span id="cacheEntries" class="float-end">--</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Memory:</strong>
+                            <span id="cacheMemory" class="float-end">--MB</span>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="cacheHitProgress">
+                        </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Taxa de acerto do cache</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs de Erro -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Logs de Erro Recentes
+                    </h6>
+                    <button class="btn btn-sm btn-outline-danger" onclick="clearErrorLogs()">
+                        <i class="bi bi-trash"></i> Limpar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="errorLogs" style="max-height: 300px; overflow-y: auto;">
+                        <p class="text-muted text-center">Carregando logs...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<!-- Chart.js CDN CORRETO -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+let responseTimeChart, requestDistributionChart;
+let refreshInterval;
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Performance page loaded');
+    
+    loadPerformanceData();
+    initCharts();
+    startAutoRefresh();
+    
+    // Event listeners para filtros de tempo
+    document.querySelectorAll('input[name="timeRange"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                loadResponseTimeData(this.value);
+            }
+        });
+    });
+});
+
+async function loadPerformanceData() {
+    try {
+        showLoading(true);
+        
+        console.log('📊 Loading performance data...');
+        const response = await fetch('/api/reports/performance');
+        
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            updateSystemMetrics(result.data.system || {});
+            updateApiPerformance(result.data.apis || []);
+            updateDatabaseMetrics(result.data.database || {});
+            updateCacheMetrics(result.data.cache || {});
+            updateErrorLogs(result.data.errorLogs || []);
+            
+            console.log('✅ Performance data loaded successfully');
+        } else {
+            throw new Error(result.message || 'Erro ao carregar dados');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading performance data:', error);
+        showToast('Erro ao carregar dados: ' + error.message, 'error');
+        
+        // Dados padrão em caso de erro
+        updateSystemMetrics({});
+        updateApiPerformance([]);
+        updateDatabaseMetrics({});
+        updateCacheMetrics({});
+        updateErrorLogs([]);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function updateSystemMetrics(system) {
+    // Status geral
+    document.getElementById('uptime').textContent = system.uptime || '--';
+    document.getElementById('responseTime').textContent = system.responseTime || '--';
+    document.getElementById('throughput').textContent = system.throughput || '--';
+    document.getElementById('errorRate').textContent = system.errorRate || '--';
+    
+    // CPU
+    const cpuUsage = system.cpu?.usage || 0;
+    document.getElementById('cpuUsage').textContent = cpuUsage + '%';
+    document.getElementById('cpuProgressBar').style.width = cpuUsage + '%';
+    document.getElementById('cpuAverage').textContent = (system.cpu?.average || 0) + '%';
+    
+    // Memória
+    const memoryUsed = system.memory?.used || 0;
+    const memoryTotal = system.memory?.total || 8;
+    const memoryPercent = memoryTotal > 0 ? (memoryUsed / memoryTotal * 100).toFixed(0) : 0;
+    document.getElementById('memoryUsage').textContent = `${memoryUsed}GB / ${memoryTotal}GB`;
+    document.getElementById('memoryProgressBar').style.width = memoryPercent + '%';
+    document.getElementById('gcCollections').textContent = system.memory?.gcCollections || '--';
+    
+    // Disco
+    const diskUsed = system.disk?.used || 0;
+    const diskTotal = system.disk?.total || 100;
+    const diskPercent = diskTotal > 0 ? (diskUsed / diskTotal * 100).toFixed(0) : 0;
+    document.getElementById('diskUsage').textContent = `${diskUsed}GB / ${diskTotal}GB`;
+    document.getElementById('diskProgressBar').style.width = diskPercent + '%';
+    document.getElementById('ioRate').textContent = system.disk?.ioRate || '--';
+    
+    // Atualizar cores das barras baseado no uso
+    updateProgressBarColor('cpuProgressBar', cpuUsage);
+    updateProgressBarColor('memoryProgressBar', memoryPercent);
+    updateProgressBarColor('diskProgressBar', diskPercent);
+}
+
+function updateProgressBarColor(elementId, percentage) {
+    const bar = document.getElementById(elementId);
+    bar.className = 'progress-bar';
+    
+    if (percentage >= 80) {
+        bar.classList.add('bg-danger');
+    } else if (percentage >= 60) {
+        bar.classList.add('bg-warning');
+    } else {
+        bar.classList.add('bg-success');
+    }
+}
+
+function updateApiPerformance(apis) {
+    const tbody = document.getElementById('apiPerformanceTable');
+    tbody.innerHTML = '';
+    
+    if (!apis || apis.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum dado disponível</td></tr>';
+        return;
+    }
+    
+    apis.forEach(api => {
+        const row = document.createElement('tr');
+        const successRate = api.successRate || 0;
+        
+        row.innerHTML = `
+            <td>
+                <code>${api.endpoint || '--'}</code>
+            </td>
+            <td>${api.requestsPerMinute || 0}</td>
+            <td>${api.averageTime || 0}ms</td>
+            <td>
+                <span class="badge ${successRate >= 95 ? 'bg-success' : successRate >= 90 ? 'bg-warning' : 'bg-danger'}">
+                    ${successRate.toFixed(1)}%
+                </span>
+            </td>
+            <td>${api.p95 || 0}ms</td>
+            <td>${api.p99 || 0}ms</td>
+            <td>
+                <span class="badge ${api.status === 'healthy' ? 'bg-success' : api.status === 'warning' ? 'bg-warning' : 'bg-danger'}">
+                    ${getStatusText(api.status)}
+                </span>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function getStatusText(status) {
+    switch(status) {
+        case 'healthy': return 'Saudável';
+        case 'warning': return 'Atenção';
+        case 'critical': return 'Crítico';
+        default: return 'Desconhecido';
+    }
+}
+
+function updateDatabaseMetrics(db) {
+    document.getElementById('activeConnections').textContent = db.activeConnections || '--';
+    document.getElementById('poolSize').textContent = db.poolSize || '--';
+    document.getElementById('avgQueryTime').textContent = (db.avgQueryTime || 0) + 'ms';
+    document.getElementById('deadlocks').textContent = db.deadlocks || 0;
+    
+    const activeConn = db.activeConnections || 0;
+    const poolSize = db.poolSize || 100;
+    const connectionPercent = poolSize > 0 ? ((activeConn / poolSize) * 100).toFixed(0) : 0;
+    document.getElementById('dbConnectionProgress').style.width = connectionPercent + '%';
+    
+    updateProgressBarColor('dbConnectionProgress', connectionPercent);
+}
+
+function updateCacheMetrics(cache) {
+    const hitRate = cache.hitRate || 0;
+    const missRate = 100 - hitRate;
+    
+    document.getElementById('cacheHitRate').textContent = hitRate.toFixed(1) + '%';
+    document.getElementById('cacheMissRate').textContent = missRate.toFixed(1) + '%';
+    document.getElementById('cacheEntries').textContent = cache.entries || '--';
+    document.getElementById('cacheMemory').textContent = (cache.memory || 0) + 'MB';
+    document.getElementById('cacheHitProgress').style.width = hitRate + '%';
+}
+
+function updateErrorLogs(logs) {
+    const container = document.getElementById('errorLogs');
+    container.innerHTML = '';
+    
+    if (!logs || logs.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">Nenhum erro recente</p>';
+        return;
+    }
+    
+    logs.forEach(log => {
+        const logDiv = document.createElement('div');
+        logDiv.className = 'border-bottom pb-2 mb-2';
+        logDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="badge bg-danger me-2">${log.level || 'ERROR'}</span>
+                    <strong>${log.message || 'Erro desconhecido'}</strong>
+                </div>
+                <small class="text-muted">${formatDateTime(log.timestamp)}</small>
+            </div>
+            <small class="text-muted">${log.source || 'N/A'}</small>
+            ${log.exception ? `<pre class="mt-2 small text-danger" style="font-size: 0.8rem;">${log.exception}</pre>` : ''}
+        `;
+        container.appendChild(logDiv);
+    });
+}
+
+function initCharts() {
+    // Verificar se Chart.js foi carregado
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js não foi carregado');
+        return;
+    }
+
+    // Gráfico de tempo de resposta
+    const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+    responseTimeChart = new Chart(responseTimeCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Tempo de Resposta (ms)',
+                data: [],
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Tempo (ms)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Horário'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // Gráfico de distribuição de requests
+    const distributionCtx = document.getElementById('requestDistributionChart').getContext('2d');
+    requestDistributionChart = new Chart(distributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['GET', 'POST', 'PUT', 'DELETE'],
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: [
+                    '#36b9cc',
+                    '#1cc88a',
+                    '#f6c23e',
+                    '#e74a3b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Carregar dados iniciais dos gráficos
+    loadResponseTimeData('24h');
+    loadRequestDistribution();
+}
+
+async function loadResponseTimeData(timeRange) {
+    try {
+        const response = await fetch(`/api/reports/performance/response-time?range=${timeRange}`);
+        if (!response.ok) return;
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            responseTimeChart.data.labels = result.data.labels || [];
+            responseTimeChart.data.datasets[0].data = result.data.values || [];
+            responseTimeChart.update();
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados do gráfico:', error);
+    }
+}
+
+async function loadRequestDistribution() {
+    try {
+        const response = await fetch('/api/reports/performance/request-distribution');
+        if (!response.ok) return;
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            requestDistributionChart.data.labels = result.data.labels || ['GET', 'POST', 'PUT', 'DELETE'];
+            requestDistributionChart.data.datasets[0].data = result.data.values || [70, 20, 8, 2];
+            requestDistributionChart.update();
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar distribuição de requests:', error);
+    }
+}
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(() => {
+        loadPerformanceData();
+        loadResponseTimeData(document.querySelector('input[name="timeRange"]:checked')?.value || '24h');
+        loadRequestDistribution();
+    }, 30000); // Atualizar a cada 30 segundos
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+}
+
+function refreshData() {
+    loadPerformanceData();
+    loadResponseTimeData(document.querySelector('input[name="timeRange"]:checked')?.value || '24h');
+    loadRequestDistribution();
+    showToast('Dados atualizados!', 'success');
+}
+
+async function exportReport() {
+    try {
+        const response = await fetch('/api/reports/performance/export');
+        if (!response.ok) {
+            throw new Error('Erro ao exportar relatório');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `performance_report_${new Date().getTime()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showToast('Relatório exportado com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao exportar: ' + error.message, 'error');
+    }
+}
+
+async function clearErrorLogs() {
+    if (!confirm('Tem certeza que deseja limpar todos os logs de erro?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/reports/performance/clear-logs', {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao limpar logs');
+        }
+        
+        document.getElementById('errorLogs').innerHTML = '<p class="text-muted text-center">Nenhum erro recente</p>';
+        showToast('Logs limpos com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao limpar logs: ' + error.message, 'error');
+    }
+}
+
+function showLoading(show) {
+    document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+    document.getElementById('performanceContent').style.display = show ? 'none' : 'block';
+}
+
+function showToast(message, type = 'info') {
+    // Sistema de toast simples
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '9999';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+        }
+    }, 3000);
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('pt-BR');
+}
+
+// Cleanup ao sair da página
+window.addEventListener('beforeunload', function() {
+    stopAutoRefresh();
+});
+
+console.log('✅ Performance page script loaded');
+</script>
+}
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+.text-xs {
+    font-size: 0.7rem;
+}
+
+.fa-2x {
+    font-size: 2em;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.progress {
+    height: 0.5rem;
+    border-radius: 0.35rem;
+}
+
+.progress-bar {
+    border-radius: 0.35rem;
+}
+
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.btn-group-sm > .btn, .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.35rem;
+}
+
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Animações suaves */
+.card, .progress-bar, .badge {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2) !important;
+}
+
+/* Loading state */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Status indicators */
+.status-online {
+    color: #1cc88a;
+}
+
+.status-warning {
+    color: #f6c23e;
+}
+
+.status-error {
+    color: #e74a3b;
+}
+
+/* Responsive adjustments */
+@@media (max-width: 768px) {
+    .h2 {
+        font-size: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-group-sm {
+        flex-wrap: wrap;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Dark mode support (se implementado futuramente) */
+@@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .card-header {
+        background-color: #4a5568;
+        border-bottom-color: #718096;
+    }
+    
+    .text-muted {
+        color: #a0aec0 !important;
+    }
+}
+</style>

@@ -1,0 +1,462 @@
+@{
+    ViewData["Title"] = "Configurações";
+}
+
+<div class="container-fluid p-0">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800 fw-bold">Configurações do Sistema</h1>
+            <p class="text-muted mb-0">Gerencie preferências e configurações avançadas</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="saveAllSettings()">
+                <i class="bi bi-check-circle"></i> Salvar Todas
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Navigation Tabs -->
+        <div class="col-12">
+            <div class="modern-card">
+                <div class="card-body p-3">
+                    <ul class="nav nav-pills justify-content-center" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="upload-tab" data-bs-toggle="pill" data-bs-target="#upload-settings">
+                                <i class="bi bi-upload"></i> Upload
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="security-tab" data-bs-toggle="pill" data-bs-target="#security-settings">
+                                <i class="bi bi-shield"></i> Segurança
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="database-tab" data-bs-toggle="pill" data-bs-target="#database-settings">
+                                <i class="bi bi-database"></i> Banco de Dados
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="logs-tab" data-bs-toggle="pill" data-bs-target="#logs-settings">
+                                <i class="bi bi-journal-text"></i> Logs
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="col-12">
+            <div class="tab-content" id="settingsTabContent">
+                
+                <!-- Upload Settings -->
+                <div class="tab-pane fade show active" id="upload-settings">
+                    <div class="modern-card">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">
+                                <i class="bi bi-upload text-primary"></i>
+                                Configurações de Upload
+                            </h4>
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Tamanho Máximo por Arquivo</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="10" min="1" max="100">
+                                            <span class="input-group-text">MB</span>
+                                        </div>
+                                        <small class="text-muted">Limite de tamanho para arquivos XML</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Uploads Simultâneos</label>
+                                        <select class="form-select">
+                                            <option value="5" selected>5 arquivos</option>
+                                            <option value="10">10 arquivos</option>
+                                            <option value="20">20 arquivos</option>
+                                            <option value="50">50 arquivos</option>
+                                        </select>
+                                        <small class="text-muted">Número máximo de uploads paralelos</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Validação Automática</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Validar automaticamente após upload</label>
+                                        </div>
+                                        <small class="text-muted">Executa validação XML imediatamente</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Notificações de Upload</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Mostrar notificações toast</label>
+                                        </div>
+                                        <small class="text-muted">Exibe alertas de sucesso/erro</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Tipos de Documento Aceitos</label>
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" checked id="cte">
+                                                    <label class="form-check-label" for="cte">CT-e</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" checked id="nfe">
+                                                    <label class="form-check-label" for="nfe">NF-e</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" checked id="mdfe">
+                                                    <label class="form-check-label" for="mdfe">MDF-e</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" checked id="nfce">
+                                                    <label class="form-check-label" for="nfce">NFC-e</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="tab-pane fade" id="security-settings">
+                    <div class="modern-card">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">
+                                <i class="bi bi-shield text-warning"></i>
+                                Configurações de Segurança
+                            </h4>
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Timeout de Sessão</label>
+                                        <select class="form-select">
+                                            <option value="30">30 minutos</option>
+                                            <option value="60" selected>1 hora</option>
+                                            <option value="120">2 horas</option>
+                                            <option value="240">4 horas</option>
+                                        </select>
+                                        <small class="text-muted">Tempo limite de inatividade</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Rate Limiting</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="100" min="10" max="1000">
+                                            <span class="input-group-text">req/min</span>
+                                        </div>
+                                        <small class="text-muted">Limite de requisições por minuto</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Auditoria de Ações</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Registrar todas as ações do usuário</label>
+                                        </div>
+                                        <small class="text-muted">Mantém log de atividades</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">HTTPS Obrigatório</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Forçar conexões seguras</label>
+                                        </div>
+                                        <small class="text-muted">Redirecionar HTTP para HTTPS</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <h6><i class="bi bi-exclamation-triangle"></i> Atenção</h6>
+                                        <p class="mb-0">Alterações nas configurações de segurança podem afetar o funcionamento do sistema. Teste cuidadosamente antes de aplicar em produção.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Settings -->
+                <div class="tab-pane fade" id="database-settings">
+                    <div class="modern-card">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">
+                                <i class="bi bi-database text-info"></i>
+                                Configurações do Banco de Dados
+                            </h4>
+                            
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">String de Conexão</label>
+                                        <textarea class="form-control" rows="3" readonly>Server=(localdb)\\mssqllocaldb;Database=DocumentosFiscaisDB;Trusted_Connection=true;MultipleActiveResultSets=true</textarea>
+                                        <small class="text-muted">Configuração atual da conexão (somente leitura)</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Pool de Conexões</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="100" min="10" max="500">
+                                            <span class="input-group-text">conexões</span>
+                                        </div>
+                                        <small class="text-muted">Máximo de conexões simultâneas</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Timeout de Comando</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" value="30" min="5" max="300">
+                                            <span class="input-group-text">segundos</span>
+                                        </div>
+                                        <small class="text-muted">Tempo limite para comandos SQL</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Cache de Queries</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Habilitar cache de consultas</label>
+                                        </div>
+                                        <small class="text-muted">Melhora performance de consultas frequentes</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Limpeza Automática</label>
+                                        <select class="form-select">
+                                            <option value="never">Nunca</option>
+                                            <option value="weekly">Semanal</option>
+                                            <option value="monthly" selected>Mensal</option>
+                                            <option value="quarterly">Trimestral</option>
+                                        </select>
+                                        <small class="text-muted">Remove documentos antigos automaticamente</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <button class="btn btn-outline-primary w-100">
+                                                <i class="bi bi-arrow-clockwise"></i> Reindexar Tabelas
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-outline-info w-100">
+                                                <i class="bi bi-graph-up"></i> Estatísticas DB
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-outline-success w-100">
+                                                <i class="bi bi-download"></i> Backup Manual
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Settings -->
+                <div class="tab-pane fade" id="logs-settings">
+                    <div class="modern-card">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">
+                                <i class="bi bi-journal-text text-secondary"></i>
+                                Configurações de Logs
+                            </h4>
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Nível de Log</label>
+                                        <select class="form-select">
+                                            <option value="trace">Trace (Muito Detalhado)</option>
+                                            <option value="debug">Debug</option>
+                                            <option value="info" selected>Information</option>
+                                            <option value="warn">Warning</option>
+                                            <option value="error">Error</option>
+                                            <option value="fatal">Fatal</option>
+                                        </select>
+                                        <small class="text-muted">Detalhamento dos logs gravados</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Retenção de Logs</label>
+                                        <select class="form-select">
+                                            <option value="7">7 dias</option>
+                                            <option value="30" selected>30 dias</option>
+                                            <option value="90">90 dias</option>
+                                            <option value="365">1 ano</option>
+                                        </select>
+                                        <small class="text-muted">Tempo para manter logs no sistema</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Log de Performance</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Registrar métricas de performance</label>
+                                        </div>
+                                        <small class="text-muted">Monitora tempo de resposta e uso de recursos</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="setting-group">
+                                        <label class="form-label fw-bold">Log de Erros Detalhado</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" checked>
+                                            <label class="form-check-label">Incluir stack trace completo</label>
+                                        </div>
+                                        <small class="text-muted">Útil para debug, mas consome mais espaço</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <button class="btn btn-outline-primary w-100">
+                                                <i class="bi bi-eye"></i> Ver Logs Atuais
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-outline-warning w-100">
+                                                <i class="bi bi-trash"></i> Limpar Logs
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-outline-success w-100">
+                                                <i class="bi bi-download"></i> Exportar Logs
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-outline-info w-100">
+                                                <i class="bi bi-graph-up"></i> Análise de Logs
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveAllSettings() {
+    // Simulate saving all settings
+    showToast('Configurações salvas com sucesso!', 'success');
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast implementation
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle me-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+
+<style>
+.setting-group {
+    margin-bottom: 1.5rem;
+}
+
+.setting-group .form-label {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.nav-pills .nav-link {
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.25rem;
+    margin: 0 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link:hover,
+.nav-pills .nav-link.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.modern-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@@media (max-width: 767px) {
+    .nav-pills {
+        flex-direction: column;
+    }
+    
+    .nav-pills .nav-link {
+        margin: 0.25rem 0;
+        text-align: center;
+    }
+}
+</style>

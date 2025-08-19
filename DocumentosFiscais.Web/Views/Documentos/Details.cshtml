@@ -1,0 +1,968 @@
+@model DocumentosFiscais.Core.Models.DocumentoFiscal
+@{
+    ViewData["Title"] = "Detalhes do Documento";
+}
+
+<div class="container-fluid p-0">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800 fw-bold">Detalhes do Documento</h1>
+            <p class="text-muted mb-0">Informações completas e ações disponíveis</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Documentos" class="btn-modern btn-secondary-modern">
+                <i class="bi bi-arrow-left"></i>
+                Voltar à Lista
+            </a>
+            <button class="btn-modern btn-secondary-modern" onclick="refreshDocument()">
+                <i class="bi bi-arrow-clockwise"></i>
+                Atualizar
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Content - Left Column -->
+        <div class="col-xl-8">
+            <!-- Document Header -->
+            <div class="modern-card mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="document-icon">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 fw-bold">@Model.NomeArquivo</h5>
+                                <div class="d-flex align-items-center gap-2">
+                                    @switch (Model.Tipo)
+                                    {
+                                        case DocumentosFiscais.Core.Models.TipoDocumento.CTe:
+                                            <span class="priority-badge low">CT-e</span>
+                                            <span class="text-muted">Conhecimento de Transporte</span>
+                                            break;
+                                        case DocumentosFiscais.Core.Models.TipoDocumento.NFe:
+                                            <span class="priority-badge medium">NF-e</span>
+                                            <span class="text-muted">Nota Fiscal Eletrônica</span>
+                                            break;
+                                        case DocumentosFiscais.Core.Models.TipoDocumento.MDFe:
+                                            <span class="priority-badge high">MDF-e</span>
+                                            <span class="text-muted">Manifesto de Documentos</span>
+                                            break;
+                                        case DocumentosFiscais.Core.Models.TipoDocumento.NFCe:
+                                            <span class="priority-badge medium">NFC-e</span>
+                                            <span class="text-muted">Nota Fiscal Consumidor</span>
+                                            break;
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            @switch (Model.Status)
+                            {
+                                case DocumentosFiscais.Core.Models.StatusProcessamento.Processado:
+                                    <span class="status-badge success fs-6">
+                                        <i class="bi bi-check-circle"></i>
+                                        Processado
+                                    </span>
+                                    break;
+                                case DocumentosFiscais.Core.Models.StatusProcessamento.Pendente:
+                                    <span class="status-badge warning fs-6">
+                                        <i class="bi bi-clock"></i>
+                                        Pendente
+                                    </span>
+                                    break;
+                                case DocumentosFiscais.Core.Models.StatusProcessamento.Erro:
+                                    <span class="status-badge error fs-6">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        Erro
+                                    </span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.NumeroDocumento))
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-hash text-muted"></i>
+                            <span class="text-sm text-muted">Número:</span>
+                            <span class="fw-medium">@Model.NumeroDocumento</span>
+                        </div>
+                    }
+                    
+                    @if (Model.ValorTotal.HasValue)
+                    {
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-currency-dollar text-success"></i>
+                            <span class="text-sm text-muted">Valor Total:</span>
+                            <span class="fw-bold text-success fs-5">@Model.ValorTotal.Value.ToString("C")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Document Information -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-info-circle text-primary"></i>
+                        Informações do Documento
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Data de Upload</label>
+                                <div class="info-value">
+                                    <i class="bi bi-calendar-check text-primary me-2"></i>
+                                    @Model.DataUpload.ToString("dd/MM/yyyy HH:mm:ss")
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @if (Model.DataEmissao.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="info-label">Data de Emissão</label>
+                                    <div class="info-value">
+                                        <i class="bi bi-calendar-event text-success me-2"></i>
+                                        @Model.DataEmissao.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Tamanho do Arquivo</label>
+                                <div class="info-value">
+                                    <i class="bi bi-file-binary text-info me-2"></i>
+                                    @FormatFileSize(Model.TamanhoArquivo)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="info-label">Hash MD5</label>
+                                <div class="info-value">
+                                    <i class="bi bi-shield-check text-warning me-2"></i>
+                                    <code class="text-xs">@Model.HashMD5</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emitter Information -->
+            @if (!string.IsNullOrEmpty(Model.NomeEmitente) || !string.IsNullOrEmpty(Model.CnpjEmitente))
+            {
+                <div class="modern-card mb-4">
+                    <div class="card-header-modern">
+                        <h6 class="card-title-modern">
+                            <i class="bi bi-building text-secondary"></i>
+                            Dados do Emitente
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-8">
+                                <div class="info-item">
+                                    <label class="info-label">Nome/Razão Social</label>
+                                    <div class="info-value">
+                                        <i class="bi bi-person-building text-secondary me-2"></i>
+                                        @Model.NomeEmitente
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.CnpjEmitente))
+                            {
+                                <div class="col-md-4">
+                                    <div class="info-item">
+                                        <label class="info-label">CNPJ</label>
+                                        <div class="info-value">
+                                            <i class="bi bi-card-text text-secondary me-2"></i>
+                                            @Model.CnpjEmitente
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- XML Content -->
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-code-square text-dark"></i>
+                        Conteúdo XML
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn-modern btn-secondary-modern btn-sm" onclick="formatXml()">
+                            <i class="bi bi-magic"></i>
+                            Formatar
+                        </button>
+                        <button class="btn-modern btn-secondary-modern btn-sm" onclick="copyXml()">
+                            <i class="bi bi-clipboard"></i>
+                            Copiar
+                        </button>
+                        <button class="btn-modern btn-secondary-modern btn-sm" onclick="downloadXml()">
+                            <i class="bi bi-download"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="xml-viewer">
+                        <pre id="xmlContent" class="xml-content"><code>@Model.ConteudoXml</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - Right Column -->
+        <div class="col-xl-4">
+            <!-- Quick Actions -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-lightning text-warning"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="/api/documentos/@Model.Id/download" class="btn-modern btn-primary-modern">
+                            <i class="bi bi-download"></i>
+                            Download XML
+                        </a>
+                        
+                        <button class="btn-modern btn-secondary-modern" onclick="validateDocument()">
+                            <i class="bi bi-shield-check"></i>
+                            Validar Documento
+                        </button>
+                        
+                        <button class="btn-modern btn-secondary-modern" onclick="analyzeStructure()">
+                            <i class="bi bi-diagram-3"></i>
+                            Analisar Estrutura
+                        </button>
+                        
+                        <button class="btn-modern btn-secondary-modern" onclick="shareDocument()">
+                            <i class="bi bi-share"></i>
+                            Compartilhar
+                        </button>
+                        
+                        <hr class="my-2">
+                        
+                        <button class="btn btn-outline-danger" onclick="confirmDelete()" style="border-radius: var(--radius-md);">
+                            <i class="bi bi-trash"></i>
+                            Excluir Documento
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Statistics -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-graph-up text-info"></i>
+                        Estatísticas do Arquivo
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="xmlLines">-</div>
+                            <div class="stat-label">Linhas</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value" id="xmlElements">-</div>
+                            <div class="stat-label">Elementos</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value" id="xmlAttributes">-</div>
+                            <div class="stat-label">Atributos</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value">@FormatFileSize(Model.TamanhoArquivo)</div>
+                            <div class="stat-label">Tamanho</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Timeline -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-clock-history text-secondary"></i>
+                        Linha do Tempo
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Upload Realizado</div>
+                                <div class="timeline-time">@Model.DataUpload.ToString("dd/MM/yyyy HH:mm")</div>
+                                <div class="timeline-desc">Arquivo enviado para o sistema</div>
+                            </div>
+                        </div>
+                        
+                        @if (Model.DataEmissao.HasValue)
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Documento Emitido</div>
+                                    <div class="timeline-time">@Model.DataEmissao.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="timeline-desc">Data original de emissão</div>
+                                </div>
+                            </div>
+                        }
+                        
+                        @switch (Model.Status)
+                        {
+                            case DocumentosFiscais.Core.Models.StatusProcessamento.Processado:
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-success"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Processamento Concluído</div>
+                                        <div class="timeline-time">@Model.DataUpload.AddMinutes(2).ToString("dd/MM/yyyy HH:mm")</div>
+                                        <div class="timeline-desc">Documento validado com sucesso</div>
+                                    </div>
+                                </div>
+                                break;
+                            case DocumentosFiscais.Core.Models.StatusProcessamento.Pendente:
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-warning"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Aguardando Processamento</div>
+                                        <div class="timeline-time">Em andamento</div>
+                                        <div class="timeline-desc">Na fila de validação</div>
+                                    </div>
+                                </div>
+                                break;
+                            case DocumentosFiscais.Core.Models.StatusProcessamento.Erro:
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-danger"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Erro no Processamento</div>
+                                        <div class="timeline-time">@Model.DataUpload.AddMinutes(1).ToString("dd/MM/yyyy HH:mm")</div>
+                                        <div class="timeline-desc">Falha na validação do documento</div>
+                                    </div>
+                                </div>
+                                break;
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Documents -->
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-collection text-info"></i>
+                        Documentos Relacionados
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div id="relatedDocuments" class="text-center text-muted">
+                        <i class="bi bi-search"></i>
+                        <div class="mt-2">Carregando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="modalDelete" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-xl);">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning border-0" style="background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md);">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p class="mb-0">Tem certeza que deseja excluir o documento <strong>@Model.NomeArquivo</strong>?</p>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmDelete" style="border-radius: var(--radius-md);">
+                    <i class="bi bi-trash"></i>
+                    Excluir Documento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .document-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.75rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .info-item {
+        margin-bottom: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .info-value {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .xml-viewer {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        max-height: 500px;
+        overflow: auto;
+    }
+
+    .xml-content {
+        background: none;
+        border: none;
+        margin: 0;
+        padding: 1.5rem;
+        font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        font-size: 0.8rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 12px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        border-radius: 1px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -1.75rem;
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .timeline-content {
+        margin-left: 1rem;
+    }
+
+    .timeline-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-time {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-desc {
+        font-size: 0.75rem;
+        color: var(--text-light);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
+    .fs-6 {
+        font-size: 0.875rem !important;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .xml-viewer {
+            max-height: 300px;
+        }
+        
+        .xml-content {
+            font-size: 0.7rem;
+            padding: 1rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    calculateXmlStats();
+    loadRelatedDocuments();
+});
+
+function calculateXmlStats() {
+    const xmlContent = document.getElementById('xmlContent').textContent;
+    
+    const lines = xmlContent.split('\n').length;
+    document.getElementById('xmlLines').textContent = lines.toLocaleString();
+    
+    const elements = (xmlContent.match(/<[^\/!][^>]*>/g) || []).length;
+    document.getElementById('xmlElements').textContent = elements.toLocaleString();
+    
+    const attributes = (xmlContent.match(/\w+="/g) || []).length;
+    document.getElementById('xmlAttributes').textContent = attributes.toLocaleString();
+}
+
+function formatXml() {
+    const xmlContent = document.getElementById('xmlContent');
+    let xml = xmlContent.textContent;
+    
+    try {
+        xml = xml.replace(/>\s*</g, '><');
+        
+        let formatted = '';
+        let indent = 0;
+        const tab = '  ';
+        
+        xml.split(/></g).forEach((node, i) => {
+            if (i > 0) formatted += '<';
+            if (node.match(/^\/\w/)) indent--;
+            formatted += tab.repeat(Math.max(0, indent)) + node;
+            if (node.match(/^<?\w[^>]*[^\/]$/)) indent++;
+            if (i < xml.split(/></g).length - 1) formatted += '>\n';
+            else formatted += '>';
+        });
+        
+        xmlContent.innerHTML = `<code>${escapeHtml(formatted)}</code>`;
+        showNotification('XML formatado com sucesso', 'success');
+    } catch (error) {
+        showNotification('Erro ao formatar XML: ' + error.message, 'error');
+    }
+}
+
+function copyXml() {
+    const xmlContent = document.getElementById('xmlContent').textContent;
+    
+    navigator.clipboard.writeText(xmlContent).then(() => {
+        showNotification('XML copiado para a área de transferência', 'success');
+    }).catch(err => {
+        showNotification('Erro ao copiar XML', 'error');
+    });
+}
+
+function downloadXml() {
+    window.open('/api/documentos/@Model.Id/download', '_blank');
+}
+
+function validateDocument() {
+    showNotification('Validação simulada - documento está válido', 'success');
+}
+
+function analyzeStructure() {
+    showNotification('Análise simulada - estrutura XML analisada', 'info');
+}
+
+function shareDocument() {
+    const url = window.location.href;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Documento Fiscal - @Model.NomeArquivo',
+            text: 'Confira os detalhes deste documento fiscal',
+            url: url
+        }).then(() => {
+            showNotification('Documento compartilhado com sucesso', 'success');
+        }).catch(err => {
+            copyToClipboard(url);
+        });
+    } else {
+        copyToClipboard(url);
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Link copiado para a área de transferência', 'success');
+    }).catch(err => {
+        showNotification('Erro ao copiar link', 'error');
+    });
+}
+
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('modalDelete'));
+    modal.show();
+}
+
+document.getElementById('btnConfirmDelete').addEventListener('click', async function() {
+    const btn = this;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<div class="loading-spinner me-2"></div> Excluindo...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/documentos/@Model.Id', {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showNotification('Documento excluído com sucesso', 'success');
+            setTimeout(() => {
+                window.location.href = '/Documentos';
+            }, 1500);
+        } else {
+            throw new Error('Erro ao excluir documento');
+        }
+    } catch (error) {
+        showNotification('Erro ao excluir documento: ' + error.message, 'error');
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+});
+
+async function refreshDocument() {
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<div class="loading-spinner me-2"></div> Atualizando...';
+    btn.disabled = true;
+    
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        calculateXmlStats();
+        loadRelatedDocuments();
+        
+        showNotification('Documento atualizado com sucesso', 'success');
+    } catch (error) {
+        showNotification('Erro ao atualizar documento', 'error');
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}
+
+async function loadRelatedDocuments() {
+    try {
+        const response = await fetch('/api/documentos?pageSize=3');
+        const result = await response.json();
+        
+        if (result.success && result.data.items.length > 0) {
+            const relatedDocs = result.data.items
+                .filter(doc => doc.id !== @Model.Id)
+                .slice(0, 3);
+            
+            if (relatedDocs.length > 0) {
+                let html = '';
+                relatedDocs.forEach(doc => {
+                    const tipoClass = doc.tipo === 0 ? 'low' : doc.tipo === 1 ? 'medium' : doc.tipo === 2 ? 'high' : 'medium';
+                    const tipoText = doc.tipo === 0 ? 'CT-e' : doc.tipo === 1 ? 'NF-e' : doc.tipo === 2 ? 'MDF-e' : 'NFC-e';
+                    
+                    html += `
+                        <div class="d-flex align-items-center gap-3 p-2 rounded hover-bg mb-2">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                <i class="bi bi-file-earmark-text text-primary"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="fw-medium text-sm">${doc.nomeArquivo}</span>
+                                    <span class="priority-badge ${tipoClass}">${tipoText}</span>
+                                </div>
+                                <div class="text-xs text-muted">${new Date(doc.dataUpload).toLocaleDateString('pt-BR')}</div>
+                            </div>
+                            <a href="/Documentos/Details/${doc.id}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('relatedDocuments').innerHTML = html;
+            } else {
+                document.getElementById('relatedDocuments').innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="bi bi-inbox"></i>
+                        <div class="mt-2">Nenhum documento relacionado</div>
+                    </div>
+                `;
+            }
+        } else {
+            document.getElementById('relatedDocuments').innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="bi bi-inbox"></i>
+                    <div class="mt-2">Nenhum documento encontrado</div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById('relatedDocuments').innerHTML = `
+            <div class="text-center text-muted">
+                <i class="bi bi-exclamation-triangle"></i>
+                <div class="mt-2">Erro ao carregar documentos</div>
+            </div>
+        `;
+    }
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Sistema de Notificações Toast
+function showNotification(message, type = 'info', duration = 3000) {
+    // Remove notificações existentes
+    const existingToasts = document.querySelectorAll('.toast-notification');
+    existingToasts.forEach(toast => toast.remove());
+    
+    // Cria o container de notificações se não existir
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Define as configurações por tipo
+    const typeConfig = {
+        success: {
+            icon: 'bi-check-circle-fill',
+            bgColor: 'linear-gradient(135deg, #10b981, #059669)',
+            textColor: '#ffffff'
+        },
+        error: {
+            icon: 'bi-exclamation-triangle-fill',
+            bgColor: 'linear-gradient(135deg, #ef4444, #dc2626)',
+            textColor: '#ffffff'
+        },
+        warning: {
+            icon: 'bi-exclamation-circle-fill',
+            bgColor: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            textColor: '#ffffff'
+        },
+        info: {
+            icon: 'bi-info-circle-fill',
+            bgColor: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            textColor: '#ffffff'
+        }
+    };
+    
+    const config = typeConfig[type] || typeConfig.info;
+    
+    // Cria a notificação
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.style.cssText = `
+        background: ${config.bgColor};
+        color: ${config.textColor};
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+        max-width: 400px;
+        font-size: 14px;
+        font-weight: 500;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    `;
+    
+    toast.innerHTML = `
+        <i class="bi ${config.icon}" style="font-size: 18px; flex-shrink: 0;"></i>
+        <span style="flex: 1;">${message}</span>
+        <i class="bi bi-x" style="font-size: 16px; opacity: 0.7; margin-left: 8px;"></i>
+    `;
+    
+    // Adiciona ao container
+    toastContainer.appendChild(toast);
+    
+    // Animação de entrada
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+        toast.style.opacity = '1';
+    }, 10);
+    
+    // Auto-remove após o tempo especificado
+    const autoRemove = setTimeout(() => {
+        removeToast(toast);
+    }, duration);
+    
+    // Remove ao clicar
+    toast.addEventListener('click', () => {
+        clearTimeout(autoRemove);
+        removeToast(toast);
+    });
+    
+    // Função para remover a notificação
+    function removeToast(toastElement) {
+        toastElement.style.transform = 'translateX(100%)';
+        toastElement.style.opacity = '0';
+        setTimeout(() => {
+            if (toastElement.parentNode) {
+                toastElement.parentNode.removeChild(toastElement);
+            }
+        }, 300);
+    }
+}
+
+// Atalhos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'c':
+                if (!e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    copyXml();
+                }
+                break;
+            case 'd':
+                e.preventDefault();
+                downloadXml();
+                break;
+            case 'f':
+                if (!e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    formatXml();
+                }
+                break;
+        }
+    }
+});
+
+// Auto-refresh para documentos pendentes
+if (@((int)Model.Status) === 1) { // StatusProcessamento.Pendente = 1
+    setInterval(() => {
+        refreshDocument();
+    }, 30000); // Atualiza a cada 30 segundos
+}
+</script>
+
+@functions {
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes == 0) return "0 B";
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        int i = 0;
+        decimal size = bytes;
+        while (size >= 1024 && i < sizes.Length - 1)
+        {
+            size /= 1024;
+            i++;
+        }
+        return $"{size:0.##} {sizes[i]}";
+    }
+}

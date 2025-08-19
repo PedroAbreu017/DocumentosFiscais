@@ -1,0 +1,484 @@
+@{
+    ViewData["Title"] = "Documentos por Período";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Header da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 text-gray-800 mb-0">📊 Documentos por Período</h1>
+            <p class="text-muted">Análise detalhada de documentos fiscais por data</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary me-2" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+            <button class="btn btn-success" onclick="exportToCSV()">
+                <i class="bi bi-download"></i> Exportar CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-funnel"></i> Filtros de Período
+            </h6>
+        </div>
+        <div class="card-body">
+            <form id="filterForm" class="row g-3">
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">Data Final</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="documentType" class="form-label">Tipo de Documento</label>
+                    <select class="form-select" id="documentType" name="documentType">
+                        <option value="">Todos os tipos</option>
+                        <option value="0">CT-e</option>
+                        <option value="1">NF-e</option>
+                        <option value="2">MDF-e</option>
+                        <option value="3">NFC-e</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary me-2" onclick="applyFilters()">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="bi bi-arrow-clockwise"></i> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2 text-muted">Carregando dados...</p>
+    </div>
+
+    <!-- Estatísticas Resumo -->
+    <div id="statsCards" class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total de Documentos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalDocuments">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Processados com Sucesso
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="successfulDocuments">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Com Pendências
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingDocuments">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Com Erro
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="errorDocuments">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-bar-chart"></i> Documentos por Tipo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="documentTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-graph-up"></i> Evolução Temporal
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Detalhada -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-table"></i> Detalhamento por Data
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>CT-e</th>
+                            <th>NF-e</th>
+                            <th>MDF-e</th>
+                            <th>NFC-e</th>
+                            <th>Total</th>
+                            <th>Taxa Sucesso</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">Carregando dados...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<!-- Chart.js do CDN correto -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+let documentTypeChart, timelineChart;
+
+// Configuração inicial das datas
+document.addEventListener('DOMContentLoaded', function() {
+    // Define data inicial como 30 dias atrás
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+    
+    // Carrega dados iniciais
+    loadData();
+});
+
+async function loadData() {
+    showLoading(true);
+    
+    try {
+        const filters = getFilters();
+        const queryString = new URLSearchParams(filters).toString();
+        const response = await fetch(`/api/reports/documents-by-period?${queryString}`);
+        
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            updateStats(result.data.stats || {});
+            updateCharts(result.data.charts || {});
+            updateTable(result.data.details || []);
+        } else {
+            throw new Error(result.message || 'Erro ao carregar dados');
+        }
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao carregar dados: ' + error.message, 'error');
+        
+        // Dados padrão em caso de erro
+        updateStats({ total: 0, successful: 0, pending: 0, error: 0 });
+        updateCharts({ byType: [0, 0, 0, 0], timeline: { labels: [], data: [] } });
+        updateTable([]);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function getFilters() {
+    return {
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        documentType: document.getElementById('documentType').value
+    };
+}
+
+function updateStats(stats) {
+    document.getElementById('totalDocuments').textContent = stats.total || 0;
+    document.getElementById('successfulDocuments').textContent = stats.successful || 0;
+    document.getElementById('pendingDocuments').textContent = stats.pending || 0;
+    document.getElementById('errorDocuments').textContent = stats.error || 0;
+}
+
+function updateCharts(chartData) {
+    // Verificar se Chart.js foi carregado
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js não foi carregado');
+        return;
+    }
+
+    // Gráfico por tipo
+    const typeCtx = document.getElementById('documentTypeChart').getContext('2d');
+    
+    if (documentTypeChart) {
+        documentTypeChart.destroy();
+    }
+    
+    documentTypeChart = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['CT-e', 'NF-e', 'MDF-e', 'NFC-e'],
+            datasets: [{
+                data: chartData.byType || [0, 0, 0, 0],
+                backgroundColor: [
+                    '#36b9cc',
+                    '#1cc88a', 
+                    '#f6c23e',
+                    '#e74a3b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Gráfico temporal
+    const timeCtx = document.getElementById('timelineChart').getContext('2d');
+    
+    if (timelineChart) {
+        timelineChart.destroy();
+    }
+    
+    const timelineData = chartData.timeline || { labels: [], data: [] };
+    
+    timelineChart = new Chart(timeCtx, {
+        type: 'line',
+        data: {
+            labels: timelineData.labels,
+            datasets: [{
+                label: 'Documentos por Dia',
+                data: timelineData.data,
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function updateTable(details) {
+    const tbody = document.getElementById('documentsTableBody');
+    tbody.innerHTML = '';
+    
+    if (!details || details.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Nenhum dado encontrado</td></tr>';
+        return;
+    }
+    
+    details.forEach(item => {
+        const row = document.createElement('tr');
+        const successRate = item.total > 0 ? ((item.successful / item.total) * 100).toFixed(1) : '0';
+        
+        row.innerHTML = `
+            <td>${formatDate(item.date)}</td>
+            <td>${item.cte || 0}</td>
+            <td>${item.nfe || 0}</td>
+            <td>${item.mdfe || 0}</td>
+            <td>${item.nfce || 0}</td>
+            <td><strong>${item.total || 0}</strong></td>
+            <td>
+                <span class="badge ${successRate >= 90 ? 'bg-success' : successRate >= 70 ? 'bg-warning' : 'bg-danger'}">
+                    ${successRate}%
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('${item.date}')">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function applyFilters() {
+    loadData();
+}
+
+function clearFilters() {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+    document.getElementById('documentType').value = '';
+    
+    loadData();
+}
+
+function showLoading(show) {
+    document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+    document.getElementById('statsCards').style.display = show ? 'none' : 'block';
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+}
+
+function viewDetails(date) {
+    const url = `/Documentos?date=${date}`;
+    window.open(url, '_blank');
+}
+
+async function exportToCSV() {
+    try {
+        const filters = getFilters();
+        const queryString = new URLSearchParams(filters).toString();
+        const response = await fetch(`/api/reports/documents-by-period/export?${queryString}`);
+        
+        if (!response.ok) {
+            throw new Error('Erro ao exportar dados');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `documentos_periodo_${new Date().getTime()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showToast('Dados exportados com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao exportar: ' + error.message, 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Sistema de toast simples
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '9999';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+</script>
+}
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+.text-xs {
+    font-size: 0.7rem;
+}
+
+.fa-2x {
+    font-size: 2em;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+</style>

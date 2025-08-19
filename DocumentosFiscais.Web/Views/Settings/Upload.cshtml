@@ -1,0 +1,38 @@
+<!-- Upload.cshtml -->
+@{
+    ViewData["Title"] = "Configurações de Upload";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 text-gray-800 mb-0">📤 Configurações de Upload</h1>
+            <p class="text-muted">Configure parâmetros de upload de documentos</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Tamanho Máximo (MB)</label>
+                            <input type="number" class="form-control" value="10">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipos de Arquivo Permitidos</label>
+                            <input type="text" class="form-control" value=".xml" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Pasta de Upload</label>
+                            <input type="text" class="form-control" value="uploads/documentos">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

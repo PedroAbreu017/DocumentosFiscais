@@ -1,0 +1,967 @@
+@{
+    ViewData["Title"] = "Upload de Documentos";
+}
+
+<div class="container-fluid p-0">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800 fw-bold">Upload de Documentos</h1>
+            <p class="text-muted mb-0">Envie seus documentos fiscais eletrônicos de forma rápida e segura</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Documentos" class="btn-modern btn-secondary-modern">
+                <i class="bi bi-arrow-left"></i>
+                Voltar à Lista
+            </a>
+            <button class="btn-modern btn-secondary-modern" onclick="limparTudo()">
+                <i class="bi bi-arrow-clockwise"></i>
+                Limpar Tudo
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Upload Area - Left Column -->
+        <div class="col-xl-8">
+            <!-- Upload Zone Card -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-cloud-upload text-primary"></i>
+                        Área de Upload
+                    </h6>
+                    <div class="text-sm text-muted">
+                        Arraste arquivos ou clique para selecionar
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Drop Zone -->
+                    <div id="dropZone" class="upload-zone">
+                        <div class="upload-zone-content">
+                            <div class="upload-icon-container">
+                                <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                            </div>
+                            <h5 class="upload-title">Arraste seus arquivos XML aqui</h5>
+                            <p class="upload-subtitle">ou clique para selecionar do seu computador</p>
+                            <div class="upload-actions">
+                                <button type="button" class="btn-modern btn-primary-modern" onclick="triggerFileInput()">
+                                    <i class="bi bi-folder2-open"></i>
+                                    Selecionar Arquivos
+                                </button>
+                            </div>
+                            <div class="upload-formats">
+                                <small class="text-muted">
+                                    Formatos aceitos: .xml • Tamanho máximo: 10MB por arquivo
+                                </small>
+                            </div>
+                        </div>
+                        <input type="file" id="fileInput" multiple accept=".xml" class="d-none">
+                    </div>
+
+                    <!-- Upload Configuration -->
+                    <div class="upload-config p-4 border-top">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-sm fw-medium">
+                                    <i class="bi bi-tag me-1"></i>
+                                    Tipo de Documento
+                                </label>
+                                <select id="tipoDocumento" class="form-select" style="border-radius: var(--radius-md);">
+                                    <option value="">Detectar automaticamente</option>
+                                    <option value="0">CT-e (Conhecimento de Transporte)</option>
+                                    <option value="1">NF-e (Nota Fiscal Eletrônica)</option>
+                                    <option value="2">MDF-e (Manifesto de Documentos)</option>
+                                    <option value="3">NFC-e (Nota Fiscal de Consumidor)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-sm fw-medium">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Opções de Validação
+                                </label>
+                                <div class="d-flex gap-3 mt-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="validarXml" checked>
+                                        <label class="form-check-label text-sm" for="validarXml">
+                                            Validar estrutura XML
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="processarAssincrono" checked>
+                                        <label class="form-check-label text-sm" for="processarAssincrono">
+                                            Processamento assíncrono
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File List -->
+            <div id="fileListCard" class="modern-card" style="display: none;">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-files text-success"></i>
+                        Arquivos Selecionados
+                        <span id="fileCount" class="status-badge info ms-2">0</span>
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn-modern btn-secondary-modern btn-sm" onclick="clearFiles()">
+                            <i class="bi bi-x-circle"></i>
+                            Limpar Lista
+                        </button>
+                        <button id="btnUpload" class="btn-modern btn-primary-modern btn-sm" disabled>
+                            <i class="bi bi-cloud-upload"></i>
+                            Fazer Upload
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="selectedFiles" class="file-list"></div>
+                </div>
+            </div>
+
+            <!-- Upload Progress -->
+            <div id="uploadProgress" class="modern-card mt-4" style="display: none;">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-arrow-up-circle text-primary"></i>
+                        Progresso do Upload
+                    </h6>
+                    <div class="text-sm text-muted" id="uploadStatus">Preparando...</div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="progress mb-3" style="height: 8px; border-radius: 10px;">
+                        <div id="progressBar" 
+                             class="progress-bar" 
+                             role="progressbar" 
+                             style="width: 0%; border-radius: 10px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" id="progressText">0%</small>
+                        <small class="text-muted" id="progressFiles">0 de 0 arquivos</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Results -->
+            <div id="uploadResults" class="modern-card mt-4" style="display: none;">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Resultados do Upload
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div id="resultsContent"></div>
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="/Documentos" class="btn-modern btn-primary-modern">
+                            <i class="bi bi-list"></i>
+                            Ver Documentos
+                        </a>
+                        <button type="button" class="btn-modern btn-secondary-modern" onclick="novoUpload()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Novo Upload
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Info & Tips -->
+        <div class="col-xl-4">
+            <!-- Quick Stats -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-speedometer2 text-info"></i>
+                        Estatísticas Rápidas
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm">Uploads hoje</span>
+                        <span class="fw-bold text-primary" id="uploadsHoje">-</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm">Total de documentos</span>
+                        <span class="fw-bold text-success" id="totalDocumentos">-</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-sm">Espaço utilizado</span>
+                        <span class="fw-bold text-info">2.3 GB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Types Info -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-info-circle text-warning"></i>
+                        Tipos Suportados
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="priority-badge low">CT-e</span>
+                            <div class="min-w-0">
+                                <div class="text-sm fw-medium">Conhecimento de Transporte</div>
+                                <div class="text-xs text-muted">Documentos de transporte de cargas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="priority-badge medium">NF-e</span>
+                            <div class="min-w-0">
+                                <div class="text-sm fw-medium">Nota Fiscal Eletrônica</div>
+                                <div class="text-xs text-muted">Documentos fiscais de venda</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="priority-badge high">MDF-e</span>
+                            <div class="min-w-0">
+                                <div class="text-sm fw-medium">Manifesto de Documentos</div>
+                                <div class="text-xs text-muted">Agrupamento de documentos</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="priority-badge medium">NFC-e</span>
+                            <div class="min-w-0">
+                                <div class="text-sm fw-medium">Nota Fiscal Consumidor</div>
+                                <div class="text-xs text-muted">Vendas ao consumidor final</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Tips -->
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <h6 class="card-title-modern">
+                        <i class="bi bi-lightbulb text-warning"></i>
+                        Dicas de Upload
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-check-circle text-success mt-1"></i>
+                            <div>
+                                <div class="text-sm fw-medium">Formato correto</div>
+                                <div class="text-xs text-muted">Use apenas arquivos .xml válidos</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-check-circle text-success mt-1"></i>
+                            <div>
+                                <div class="text-sm fw-medium">Tamanho ideal</div>
+                                <div class="text-xs text-muted">Máximo 10MB por arquivo</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-check-circle text-success mt-1"></i>
+                            <div>
+                                <div class="text-sm fw-medium">Upload múltiplo</div>
+                                <div class="text-xs text-muted">Selecione vários arquivos de uma vez</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-check-circle text-success mt-1"></i>
+                            <div>
+                                <div class="text-sm fw-medium">Validação automática</div>
+                                <div class="text-xs text-muted">Estrutura XML verificada automaticamente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .upload-zone {
+        border: 2px dashed #d1d5db;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-zone:hover {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .upload-zone.dragover {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .upload-zone-content {
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .upload-icon-container {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+        color: white;
+    }
+
+    .upload-title {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+
+    .upload-actions {
+        margin-bottom: 1rem;
+    }
+
+    .upload-formats {
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .upload-config {
+        background: rgba(248, 250, 252, 0.5);
+    }
+
+    .file-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s ease;
+    }
+
+    .file-item:hover {
+        background-color: var(--bg-secondary);
+    }
+
+    .file-item:last-child {
+        border-bottom: none;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .file-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 1.25rem;
+    }
+
+    .file-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .file-name {
+        font-weight: 500;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text-primary);
+    }
+
+    .file-size {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .file-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .progress {
+        background-color: #f3f4f6;
+        border: none;
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
+    .min-w-0 {
+        min-width: 0;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .upload-zone-content {
+            padding: 2rem 1rem;
+        }
+        
+        .upload-icon-container {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .upload-icon {
+            font-size: 1.5rem;
+        }
+        
+        .upload-title {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+<script>
+let selectedFiles = [];
+let uploadInProgress = false;
+
+// DOM Elements
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileListCard = document.getElementById('fileListCard');
+const selectedFilesDiv = document.getElementById('selectedFiles');
+const btnUpload = document.getElementById('btnUpload');
+const fileCount = document.getElementById('fileCount');
+const uploadProgress = document.getElementById('uploadProgress');
+const uploadResults = document.getElementById('uploadResults');
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    initializeUpload();
+    loadQuickStats();
+});
+
+function initializeUpload() {
+    // Drag and drop events
+    dropZone.addEventListener('click', triggerFileInput);
+    dropZone.addEventListener('dragover', handleDragOver);
+    dropZone.addEventListener('dragleave', handleDragLeave);
+    dropZone.addEventListener('drop', handleDrop);
+    
+    // File input change
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Upload button
+    btnUpload.addEventListener('click', handleUpload);
+    
+    // Prevent default drag behaviors on document
+    document.addEventListener('dragover', e => e.preventDefault());
+    document.addEventListener('drop', e => e.preventDefault());
+    
+    console.log('✅ Upload inicializado');
+}
+
+// FUNÇÃO CORRIGIDA - SEM DUPLO CLIQUE
+function triggerFileInput() {
+    if (!uploadInProgress) {
+        console.log('✅ Abrindo seletor de arquivos...');
+        fileInput.click();
+    } else {
+        console.log('🚫 Upload em progresso, aguarde...');
+    }
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    if (!dropZone.contains(e.relatedTarget)) {
+        dropZone.classList.remove('dragover');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    
+    if (uploadInProgress) return;
+    
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+}
+
+function handleFileSelect(e) {
+    if (uploadInProgress) return;
+    
+    const files = Array.from(e.target.files);
+    addFiles(files);
+    console.log('📁 Arquivos selecionados:', files.length);
+}
+
+function addFiles(files) {
+    const xmlFiles = files.filter(file => file.name.toLowerCase().endsWith('.xml'));
+    
+    if (xmlFiles.length !== files.length) {
+        showNotification('Apenas arquivos XML são aceitos', 'warning');
+    }
+    
+    const oversizedFiles = xmlFiles.filter(file => file.size > 10 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+        showNotification(`${oversizedFiles.length} arquivo(s) excede(m) 10MB e será(ão) ignorado(s)`, 'warning');
+    }
+    
+    const validFiles = xmlFiles.filter(file => file.size <= 10 * 1024 * 1024);
+    
+    validFiles.forEach(file => {
+        if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+            selectedFiles.push({
+                file: file,
+                id: Date.now() + Math.random(),
+                status: 'pending',
+                progress: 0
+            });
+        }
+    });
+    
+    updateFileList();
+    
+    if (validFiles.length > 0) {
+        showNotification(`${validFiles.length} arquivo(s) adicionado(s) com sucesso`, 'success');
+    }
+}
+
+function updateFileList() {
+    if (selectedFiles.length === 0) {
+        fileListCard.style.display = 'none';
+        btnUpload.disabled = true;
+        return;
+    }
+    
+    fileListCard.style.display = 'block';
+    btnUpload.disabled = uploadInProgress;
+    fileCount.textContent = selectedFiles.length;
+    
+    selectedFilesDiv.innerHTML = '';
+    
+    selectedFiles.forEach((fileObj, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        
+        const statusIcon = getStatusIcon(fileObj.status);
+        const statusColor = getStatusColor(fileObj.status);
+        
+        fileItem.innerHTML = `
+            <div class="file-info">
+                <div class="file-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="file-details">
+                    <div class="file-name" title="${fileObj.file.name}">${fileObj.file.name}</div>
+                    <div class="file-size">${formatFileSize(fileObj.file.size)}</div>
+                </div>
+            </div>
+            <div class="file-status">
+                <span class="status-badge ${statusColor}">
+                    <i class="bi bi-${statusIcon}"></i>
+                    ${getStatusText(fileObj.status)}
+                </span>
+                ${fileObj.status === 'pending' ? `
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})" title="Remover">
+                        <i class="bi bi-x"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        selectedFilesDiv.appendChild(fileItem);
+    });
+}
+
+function removeFile(index) {
+    if (uploadInProgress) return;
+    
+    selectedFiles.splice(index, 1);
+    updateFileList();
+    
+    if (selectedFiles.length === 0) {
+        fileInput.value = '';
+    }
+}
+
+function clearFiles() {
+    if (uploadInProgress) return;
+    
+    selectedFiles = [];
+    fileInput.value = '';
+    updateFileList();
+}
+
+async function handleUpload() {
+    if (selectedFiles.length === 0 || uploadInProgress) return;
+    
+    uploadInProgress = true;
+    btnUpload.disabled = true;
+    
+    // Show progress
+    uploadProgress.style.display = 'block';
+    uploadResults.style.display = 'none';
+    
+    const tipoDocumento = document.getElementById('tipoDocumento').value;
+    const results = [];
+    
+    console.log('🚀 Iniciando upload de', selectedFiles.length, 'arquivos');
+    
+    for (let i = 0; i < selectedFiles.length; i++) {
+        const fileObj = selectedFiles[i];
+        const progress = Math.round(((i + 1) / selectedFiles.length) * 100);
+        
+        updateProgress(progress, `Enviando ${fileObj.file.name}...`, i + 1, selectedFiles.length);
+        
+        try {
+            fileObj.status = 'uploading';
+            updateFileList();
+            
+            const result = await uploadFile(fileObj.file, tipoDocumento);
+            fileObj.status = 'success';
+            results.push({ file: fileObj.file.name, success: true, result });
+            console.log('✅ Upload sucesso:', fileObj.file.name);
+            
+        } catch (error) {
+            fileObj.status = 'error';
+            results.push({ file: fileObj.file.name, success: false, error: error.message });
+            console.log('❌ Upload erro:', fileObj.file.name, error.message);
+        }
+        
+        updateFileList();
+    }
+    
+    updateProgress(100, 'Upload concluído!', selectedFiles.length, selectedFiles.length);
+    showResults(results);
+    
+    uploadInProgress = false;
+    loadQuickStats(); // Refresh stats
+    
+    console.log('🎯 Upload finalizado. Sucessos:', results.filter(r => r.success).length);
+}
+
+async function uploadFile(file, tipo) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    if (tipo) {
+        formData.append('tipo', tipo);
+    }
+    
+    const response = await fetch('/api/documentos/upload', {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
+    return await response.json();
+}
+
+function updateProgress(percent, message, current, total) {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressFiles = document.getElementById('progressFiles');
+    const uploadStatus = document.getElementById('uploadStatus');
+    
+    progressBar.style.width = percent + '%';
+    progressText.textContent = percent + '%';
+    progressFiles.textContent = `${current} de ${total} arquivos`;
+    uploadStatus.textContent = message;
+}
+
+function showResults(results) {
+    uploadResults.style.display = 'block';
+    
+    const successCount = results.filter(r => r.success).length;
+    const errorCount = results.length - successCount;
+    
+    const alertClass = errorCount === 0 ? 'success' : successCount === 0 ? 'danger' : 'warning';
+    const alertIcon = errorCount === 0 ? 'check-circle' : successCount === 0 ? 'x-circle' : 'exclamation-triangle';
+    
+    let html = `
+        <div class="alert alert-${alertClass} border-0" style="border-radius: var(--radius-md);">
+            <h6 class="alert-heading d-flex align-items-center gap-2">
+                <i class="bi bi-${alertIcon}"></i>
+                Resultado do Upload
+            </h6>
+            <p class="mb-0">
+                <strong>${successCount}</strong> arquivo(s) enviado(s) com sucesso
+                ${errorCount > 0 ? `, <strong>${errorCount}</strong> erro(s)` : ''}
+            </p>
+        </div>
+    `;
+    
+    if (results.length > 0) {
+        html += '<div class="list-group" style="border-radius: var(--radius-md); overflow: hidden;">';
+        
+        results.forEach(result => {
+            const statusClass = result.success ? 'success' : 'error';
+            const statusIcon = result.success ? 'check-circle' : 'exclamation-triangle';
+            
+            html += `
+                <div class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-${statusIcon} text-${result.success ? 'success' : 'danger'}"></i>
+                        <div>
+                            <div class="fw-medium text-sm">${result.file}</div>
+                            <div class="text-xs text-muted">
+                                ${result.success ? 'Upload realizado com sucesso' : result.error}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-badge ${statusClass}">
+                        <i class="bi bi-${statusIcon}"></i>
+                        ${result.success ? 'Sucesso' : 'Erro'}
+                    </span>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+    }
+    
+    document.getElementById('resultsContent').innerHTML = html;
+    
+    // Scroll to results
+    uploadResults.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function loadQuickStats() {
+    try {
+        const response = await fetch('/api/dashboard/stats');
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('uploadsHoje').textContent = result.data.documentosHoje;
+            document.getElementById('totalDocumentos').textContent = result.data.totalDocumentos;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+function novoUpload() {
+    clearFiles();
+    uploadProgress.style.display = 'none';
+    uploadResults.style.display = 'none';
+    document.getElementById('tipoDocumento').value = '';
+    document.getElementById('validarXml').checked = true;
+    document.getElementById('processarAssincrono').checked = true;
+}
+
+function limparTudo() {
+    novoUpload();
+    showNotification('Área de upload limpa', 'info');
+}
+
+// Utility functions
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function getStatusIcon(status) {
+    switch (status) {
+        case 'pending': return 'clock';
+        case 'uploading': return 'arrow-up-circle';
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-triangle';
+        default: return 'clock';
+    }
+}
+
+function getStatusColor(status) {
+    switch (status) {
+        case 'pending': return 'info';
+        case 'uploading': return 'warning';
+        case 'success': return 'success';
+        case 'error': return 'error';
+        default: return 'info';
+    }
+}
+
+function getStatusText(status) {
+    switch (status) {
+        case 'pending': return 'Aguardando';
+        case 'uploading': return 'Enviando';
+        case 'success': return 'Sucesso';
+        case 'error': return 'Erro';
+        default: return 'Aguardando';
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'error' ? 'danger' : 'primary'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.style.borderRadius = 'var(--radius-md)';
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'error' ? 'x-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', () => {
+        if (toastContainer.contains(toast)) {
+            toastContainer.removeChild(toast);
+        }
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    container.style.zIndex = '1055';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+U or Cmd+U for upload
+    if ((e.ctrlKey || e.metaKey) && e.key === 'u' && !uploadInProgress) {
+        e.preventDefault();
+        triggerFileInput();
+    }
+    
+    // Escape to clear
+    if (e.key === 'Escape' && !uploadInProgress) {
+        clearFiles();
+    }
+    
+    // Enter to start upload
+    if (e.key === 'Enter' && selectedFiles.length > 0 && !uploadInProgress) {
+        handleUpload();
+    }
+});
+
+// Auto-save upload preferences
+function savePreferences() {
+    const preferences = {
+        tipoDocumento: document.getElementById('tipoDocumento').value,
+        validarXml: document.getElementById('validarXml').checked,
+        processarAssincrono: document.getElementById('processarAssincrono').checked
+    };
+    
+    localStorage.setItem('uploadPreferences', JSON.stringify(preferences));
+}
+
+function loadPreferences() {
+    const saved = localStorage.getItem('uploadPreferences');
+    if (saved) {
+        try {
+            const preferences = JSON.parse(saved);
+            document.getElementById('tipoDocumento').value = preferences.tipoDocumento || '';
+            document.getElementById('validarXml').checked = preferences.validarXml !== false;
+            document.getElementById('processarAssincrono').checked = preferences.processarAssincrono !== false;
+        } catch (error) {
+            console.warn('Erro ao carregar preferências:', error);
+        }
+    }
+}
+
+// Save preferences when changed
+document.getElementById('tipoDocumento').addEventListener('change', savePreferences);
+document.getElementById('validarXml').addEventListener('change', savePreferences);
+document.getElementById('processarAssincrono').addEventListener('change', savePreferences);
+
+// Load preferences on page load
+document.addEventListener('DOMContentLoaded', loadPreferences);
+
+// Page visibility API to pause/resume if needed
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && uploadInProgress) {
+        console.log('Upload em andamento - página em background');
+    }
+});
+
+// Warn before leaving during upload
+window.addEventListener('beforeunload', function(e) {
+    if (uploadInProgress) {
+        const message = 'Upload em andamento. Tem certeza que deseja sair?';
+        e.returnValue = message;
+        return message;
+    }
+});
+</script>

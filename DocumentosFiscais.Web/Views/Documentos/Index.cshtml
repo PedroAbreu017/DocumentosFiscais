@@ -1,0 +1,727 @@
+@model DocumentosFiscais.Core.ViewModels.DocumentoListViewModel
+@{
+    ViewData["Title"] = "Documentos Fiscais";
+}
+
+<div class="container-fluid p-0">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800 fw-bold">Documentos Fiscais</h1>
+            <p class="text-muted mb-0">Gerencie seus documentos fiscais eletrônicos</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn-modern btn-secondary-modern" onclick="exportarDocumentos()">
+                <i class="bi bi-download"></i>
+                Exportar
+            </button>
+            <a href="/Documentos/Upload" class="btn-modern btn-primary-modern">
+                <i class="bi bi-plus-lg"></i>
+                Novo Upload
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="modern-card mb-4">
+        <div class="card-header-modern">
+            <h6 class="card-title-modern">
+                <i class="bi bi-funnel text-primary"></i>
+                Filtros
+            </h6>
+            <button class="btn-modern btn-secondary-modern btn-sm" onclick="limparFiltros()">
+                <i class="bi bi-x-circle"></i>
+                Limpar
+            </button>
+        </div>
+        <div class="card-body p-4">
+            <form method="get" class="row g-3" id="filtrosForm">
+                <input type="hidden" name="page" value="@Model.PaginaAtual" id="pageInput">
+                
+                <div class="col-md-4">
+                    <label class="form-label text-sm fw-medium">Buscar documento</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control border-start-0 ps-0" 
+                               name="filtro" 
+                               value="@Model.FiltroNome" 
+                               placeholder="Nome do arquivo ou número..."
+                               style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                    </div>
+                </div>
+                
+<div class="col-md-3">
+    <label class="form-label text-sm fw-medium">Tipo de Documento</label>
+    <select class="form-select" name="tipo" style="border-radius: var(--radius-md);">
+        <option value="">Todos os tipos</option>
+        <option value="1">CT-e</option>
+        <option value="2">NF-e</option>
+        <option value="3">MDF-e</option>
+        <option value="4">NFC-e</option>
+    </select>
+</div>
+
+<div class="col-md-3">
+    <label class="form-label text-sm fw-medium">Status</label>
+    <select class="form-select" name="status" style="border-radius: var(--radius-md);">
+        <option value="">Todos os status</option>
+        <option value="1">Pendente</option>
+        <option value="2">Processando</option>
+        <option value="3">Processado</option>
+        <option value="4">Erro</option>
+        <option value="5">Cancelado</option>
+    </select>
+</div>
+                
+                <div class="col-md-2">
+                    <label class="form-label text-sm fw-medium">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn-modern btn-primary-modern">
+                            <i class="bi bi-search"></i>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="modern-card">
+        <div class="card-header-modern">
+            <h6 class="card-title-modern">
+                <i class="bi bi-files text-success"></i>
+                Documentos (@Model.TotalCount total)
+            </h6>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn-modern btn-secondary-modern btn-sm dropdown-toggle" 
+                            type="button" 
+                            data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                        Ações
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="selecionarTodos()">
+                            <i class="bi bi-check-all me-2"></i>Selecionar Todos
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportarSelecionados()">
+                            <i class="bi bi-download me-2"></i>Exportar Selecionados
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="excluirSelecionados()">
+                            <i class="bi bi-trash me-2"></i>Excluir Selecionados
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            @if (Model.Documentos.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid var(--border-color);">
+                            <tr>
+                                <th class="border-0 ps-4" style="width: 40px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </div>
+                                </th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs">Documento</th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs">Tipo</th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs">Emitente</th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs">Valor</th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs">Data</th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs">Status</th>
+                                <th class="border-0 fw-semibold text-muted text-uppercase text-xs pe-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var doc in Model.Documentos)
+                            {
+                                <tr class="border-bottom" style="border-color: var(--border-color) !important;">
+                                    <td class="ps-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input document-checkbox" type="checkbox" value="@doc.Id">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-primary bg-opacity-10 p-2 rounded-2 flex-shrink-0">
+                                                <i class="bi bi-file-earmark-text text-primary"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="fw-medium text-sm text-truncate" style="max-width: 200px;" title="@doc.NomeArquivo">
+                                                    @doc.NomeArquivo
+                                                </div>
+                                                <div class="text-xs text-muted">
+                                                    @if (!string.IsNullOrEmpty(doc.NumeroDocumento))
+                                                    {
+                                                        <span>Nº @doc.NumeroDocumento</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @switch (doc.Tipo)
+                                        {
+                                            case DocumentosFiscais.Core.Models.TipoDocumento.CTe:
+                                                <span class="priority-badge low">CT-e</span>
+                                                break;
+                                            case DocumentosFiscais.Core.Models.TipoDocumento.NFe:
+                                                <span class="priority-badge medium">NF-e</span>
+                                                break;
+                                            case DocumentosFiscais.Core.Models.TipoDocumento.MDFe:
+                                                <span class="priority-badge high">MDF-e</span>
+                                                break;
+                                            case DocumentosFiscais.Core.Models.TipoDocumento.NFCe:
+                                                <span class="priority-badge medium">NFC-e</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="min-w-0">
+                                            <div class="fw-medium text-sm text-truncate" style="max-width: 180px;" title="@doc.NomeEmitente">
+                                                @doc.NomeEmitente
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(doc.CnpjEmitente))
+                                            {
+                                                <div class="text-xs text-muted">@doc.CnpjEmitente</div>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (doc.ValorTotal.HasValue)
+                                        {
+                                            <div class="fw-semibold text-success">
+                                                @doc.ValorTotal.Value.ToString("C")
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="text-sm">@doc.DataUpload.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-xs text-muted">@doc.DataUpload.ToString("HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        @switch (doc.Status)
+                                        {
+                                            case DocumentosFiscais.Core.Models.StatusProcessamento.Processado:
+                                                <span class="status-badge success">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    Processado
+                                                </span>
+                                                break;
+                                            case DocumentosFiscais.Core.Models.StatusProcessamento.Pendente:
+                                                <span class="status-badge warning">
+                                                    <i class="bi bi-clock"></i>
+                                                    Pendente
+                                                </span>
+                                                break;
+                                            case DocumentosFiscais.Core.Models.StatusProcessamento.Erro:
+                                                <span class="status-badge error">
+                                                    <i class="bi bi-exclamation-triangle"></i>
+                                                    Erro
+                                                </span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="pe-4">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                    type="button" 
+                                                    data-bs-toggle="dropdown"
+                                                    style="border-radius: var(--radius-md); border-color: var(--border-color);">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="/Documentos/Details/@doc.Id">
+                                                        <i class="bi bi-eye me-2"></i>Visualizar
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="/api/documentos/@doc.Id/download">
+                                                        <i class="bi bi-download me-2"></i>Download
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" onclick="confirmarExclusao(@doc.Id, '@doc.NomeArquivo')">
+                                                        <i class="bi bi-trash me-2"></i>Excluir
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- ✅ CONTROLES DE PAGINAÇÃO ADICIONADOS -->
+                @if (Model.TotalPaginas > 1)
+                {
+                    <div class="card-footer bg-light border-top py-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p class="text-muted mb-0 text-sm">
+                                    Mostrando @Model.PrimeiroItem a @Model.UltimoItem de @Model.TotalCount documentos
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav aria-label="Navegação de páginas">
+                                    <ul class="pagination justify-content-end mb-0">
+                                        <!-- Primeira página -->
+                                        @if (Model.PaginaAtual > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@GetPageUrl(1)" aria-label="Primeira" title="Primeira página">
+                                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        
+                                        <!-- Página anterior -->
+                                        @if (Model.PaginaAtual > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@GetPageUrl(Model.PaginaAtual - 1)" aria-label="Anterior" title="Página anterior (Ctrl + ←)">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        
+                                        <!-- Páginas numeradas -->
+                                        @{
+                                            int startPage = Math.Max(1, Model.PaginaAtual - 2);
+                                            int endPage = Math.Min(Model.TotalPaginas, Model.PaginaAtual + 2);
+                                            
+                                            // Ajustar para sempre mostrar 5 páginas quando possível
+                                            if (endPage - startPage < 4)
+                                            {
+                                                if (startPage == 1)
+                                                    endPage = Math.Min(Model.TotalPaginas, startPage + 4);
+                                                else if (endPage == Model.TotalPaginas)
+                                                    startPage = Math.Max(1, endPage - 4);
+                                            }
+                                        }
+                                        
+                                        @if (startPage > 1)
+                                        {
+                                            <li class="page-item">
+                                                <span class="page-link text-muted">...</span>
+                                            </li>
+                                        }
+                                        
+                                        @for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            <li class="page-item @(i == Model.PaginaAtual ? "active" : "")">
+                                                <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                                            </li>
+                                        }
+                                        
+                                        @if (endPage < Model.TotalPaginas)
+                                        {
+                                            <li class="page-item">
+                                                <span class="page-link text-muted">...</span>
+                                            </li>
+                                        }
+                                        
+                                        <!-- Próxima página -->
+                                        @if (Model.PaginaAtual < Model.TotalPaginas)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@GetPageUrl(Model.PaginaAtual + 1)" aria-label="Próxima" title="Próxima página (Ctrl + →)">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        
+                                        <!-- Última página -->
+                                        @if (Model.PaginaAtual < Model.TotalPaginas)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@GetPageUrl(Model.TotalPaginas)" aria-label="Última" title="Última página">
+                                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card-footer bg-light border-top py-3">
+                        <div class="text-sm text-muted text-center">
+                            @Model.TotalCount documento@(Model.TotalCount != 1 ? "s" : "") encontrado@(Model.TotalCount != 1 ? "s" : "")
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h5 class="text-muted mb-3">Nenhum documento encontrado</h5>
+                    <p class="text-muted mb-4">
+                        @if (Model.TemFiltrosAtivos)
+                        {
+                            <span>Não encontramos documentos com os filtros aplicados.</span>
+                        }
+                        else
+                        {
+                            <span>Comece fazendo upload dos seus documentos fiscais.</span>
+                        }
+                    </p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        @if (Model.TemFiltrosAtivos)
+                        {
+                            <button class="btn-modern btn-secondary-modern" onclick="limparFiltros()">
+                                <i class="bi bi-x-circle"></i>
+                                Limpar Filtros
+                            </button>
+                        }
+                        <a href="/Documentos/Upload" class="btn-modern btn-primary-modern">
+                            <i class="bi bi-cloud-upload"></i>
+                            Fazer Upload
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExclusao" tabindex="-1" aria-labelledby="modalExclusaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-xl);">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalExclusaoLabel">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="alert alert-warning border-0" style="background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md);">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p class="mb-0">Tem certeza que deseja excluir o documento <strong id="nomeDocumentoExclusao"></strong>?</p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">
+                    <i class="bi bi-x"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusao" style="border-radius: var(--radius-md);">
+                    <i class="bi bi-trash"></i>
+                    Excluir Documento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    // ✅ FUNÇÃO HELPER PARA GERAR URLs DE PAGINAÇÃO
+    string GetPageUrl(int page)
+    {
+        var queryParams = new List<string>();
+        
+        queryParams.Add($"page={page}");
+        
+        if (!string.IsNullOrEmpty(Model.FiltroNome))
+            queryParams.Add($"filtro={Uri.EscapeDataString(Model.FiltroNome)}");
+            
+        if (Model.FiltroTipo.HasValue)
+            queryParams.Add($"tipo={(int)Model.FiltroTipo.Value}");
+            
+        if (Model.FiltroStatus.HasValue)
+            queryParams.Add($"status={(int)Model.FiltroStatus.Value}");
+        
+        return $"?{string.Join("&", queryParams)}";
+    }
+}
+
+<style>
+    .text-xs {
+        font-size: 0.75rem;
+    }
+    
+    .text-sm {
+        font-size: 0.875rem;
+    }
+    
+    .min-w-0 {
+        min-width: 0;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .dropdown-menu {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .dropdown-item {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .dropdown-item:hover {
+        background-color: var(--bg-secondary);
+    }
+    
+    .table > tbody > tr:hover {
+        background-color: rgba(99, 102, 241, 0.02);
+    }
+    
+    .input-group-text {
+        border-radius: var(--radius-md) 0 0 var(--radius-md);
+    }
+    
+    /* ✅ ESTILOS PARA PAGINAÇÃO */
+    .pagination .page-link {
+        color: #6c757d;
+        border-color: #dee2e6;
+        border-radius: var(--radius-md);
+        margin: 0 2px;
+        font-size: 0.875rem;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: var(--primary-color, #007bff);
+        border-color: var(--primary-color, #007bff);
+        color: white;
+    }
+
+    .pagination .page-link:hover:not(.active) {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        color: var(--primary-color, #007bff);
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+
+    /* Responsivo para mobile */
+    @@media (max-width: 768px) {
+        .pagination {
+            font-size: 0.75rem;
+        }
+        
+        .pagination .page-link {
+            padding: 0.375rem 0.5rem;
+        }
+        
+        /* Esconder números das páginas em mobile, mostrar apenas prev/next */
+        .pagination .page-item:not(.active):not([aria-label]) {
+            display: none;
+        }
+        
+        .pagination .page-item.active,
+        .pagination .page-item[aria-label] {
+            display: block;
+        }
+    }
+</style>
+<script>
+let documentoIdParaExcluir = null;
+
+function confirmarExclusao(id, nomeArquivo) {
+    documentoIdParaExcluir = id;
+    document.getElementById('nomeDocumentoExclusao').textContent = nomeArquivo;
+    const modal = new bootstrap.Modal(document.getElementById('modalExclusao'));
+    modal.show();
+}
+
+document.getElementById('btnConfirmarExclusao').addEventListener('click', async function() {
+    if (!documentoIdParaExcluir) return;
+    
+    const btn = this;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<div class="loading-spinner me-2"></div> Excluindo...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(`/api/documentos/${documentoIdParaExcluir}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            throw new Error('Erro ao excluir documento');
+        }
+    } catch (error) {
+        alert('Erro ao excluir documento: ' + error.message);
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalExclusao'));
+    modal.hide();
+});
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.document-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+function selecionarTodos() {
+    const checkboxes = document.querySelectorAll('.document-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    document.getElementById('selectAll').checked = true;
+}
+
+function getDocumentosSelecionados() {
+    const checkboxes = document.querySelectorAll('.document-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function exportarDocumentos() {
+    console.log('Exportar todos os documentos');
+}
+
+function exportarSelecionados() {
+    const selecionados = getDocumentosSelecionados();
+    if (selecionados.length === 0) {
+        alert('Selecione pelo menos um documento para exportar.');
+        return;
+    }
+    console.log('Exportar documentos selecionados:', selecionados);
+}
+
+function excluirSelecionados() {
+    const selecionados = getDocumentosSelecionados();
+    if (selecionados.length === 0) {
+        alert('Selecione pelo menos um documento para excluir.');
+        return;
+    }
+    
+    if (confirm(`Tem certeza que deseja excluir ${selecionados.length} documento(s) selecionado(s)?`)) {
+        console.log('Excluir documentos selecionados:', selecionados);
+    }
+}
+
+function limparFiltros() {
+    window.location.href = '/Documentos';
+}
+
+// Atalhos de teclado para navegação
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey) {
+        switch(e.key) {
+            case 'ArrowLeft':
+                @if (Model.PaginaAtual > 1)
+                {
+                    <text>window.location.href = '@GetPageUrl(Model.PaginaAtual - 1)';</text>
+                }
+                e.preventDefault();
+                break;
+            case 'ArrowRight':
+                @if (Model.PaginaAtual < Model.TotalPaginas)
+                {
+                    <text>window.location.href = '@GetPageUrl(Model.PaginaAtual + 1)';</text>
+                }
+                e.preventDefault();
+                break;
+        }
+    }
+});
+
+// Auto-submit do formulário de filtros com debounce
+let timeoutId;
+document.querySelector('input[name="filtro"]').addEventListener('input', function() {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+        document.getElementById('pageInput').value = '1';
+        document.getElementById('filtrosForm').submit();
+    }, 500);
+});
+
+// Manter página atual ao mudar filtros de select
+document.querySelectorAll('select[name="tipo"], select[name="status"]').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('pageInput').value = '1';
+        document.getElementById('filtrosForm').submit();
+    });
+});
+
+// Indicador visual de carregamento para paginação
+document.querySelectorAll('.pagination .page-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        if (!this.parentElement.classList.contains('active')) {
+            this.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Carregando...</span></div>';
+        }
+    });
+});
+
+// Manter filtros selecionados após submit
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Restaurar tipo selecionado
+    const tipoSelect = document.querySelector('select[name="tipo"]');
+    const tipoValue = urlParams.get('tipo');
+    if (tipoValue && tipoSelect) {
+        tipoSelect.value = tipoValue;
+    }
+    
+    // Restaurar status selecionado
+    const statusSelect = document.querySelector('select[name="status"]');
+    const statusValue = urlParams.get('status');
+    if (statusValue && statusSelect) {
+        statusSelect.value = statusValue;
+    }
+    
+    // Tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+
+<style>
+/* Esconder erros de JavaScript */
+body::after {
+    display: none !important;
+}
+
+.dev-error-overlay {
+    display: none !important;
+}
+</style>

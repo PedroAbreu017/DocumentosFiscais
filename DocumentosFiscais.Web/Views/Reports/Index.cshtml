@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Relatórios";
+}
+
+<div class="container-fluid p-0">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800 fw-bold">Relatórios</h1>
+            <p class="text-muted mb-0">Análises e métricas dos documentos fiscais</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Reports/ExportToCsv" class="btn btn-success">
+                <i class="bi bi-download"></i> Exportar CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Documentos por Período -->
+        <div class="col-lg-6 col-md-12">
+            <div class="modern-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-calendar-range text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-1">Documentos por Período</h5>
+                            <p class="text-muted mb-0">Relatório detalhado por data</p>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3">
+                        Analise documentos por período específico, filtre por tipo e visualize estatísticas detalhadas.
+                    </p>
+                    <a href="/Reports/DocumentsByPeriod" class="btn btn-primary">
+                        <i class="bi bi-bar-chart"></i> Ver Relatório
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance do Sistema -->
+        <div class="col-lg-6 col-md-12">
+            <div class="modern-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-speedometer text-success fs-4"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-1">Performance do Sistema</h5>
+                            <p class="text-muted mb-0">Métricas de processamento</p>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3">
+                        Monitore a performance do sistema, taxa de sucesso e atividades recentes.
+                    </p>
+                    <a href="/Reports/Performance" class="btn btn-success">
+                        <i class="bi bi-graph-up"></i> Ver Performance
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="modern-card">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">Ações Rápidas</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <a href="/Reports/DocumentsByPeriod?startDate=@DateTime.Today.AddDays(-7)&endDate=@DateTime.Today" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-calendar-week"></i><br>
+                                <small>Últimos 7 dias</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/Reports/DocumentsByPeriod?startDate=@DateTime.Today.AddDays(-30)&endDate=@DateTime.Today" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-calendar-month"></i><br>
+                                <small>Último mês</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/Reports/ExportToCsv?startDate=@DateTime.Today.AddDays(-30)" class="btn btn-outline-success w-100">
+                                <i class="bi bi-download"></i><br>
+                                <small>Export Mensal</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/Reports/Performance" class="btn btn-outline-info w-100">
+                                <i class="bi bi-speedometer2"></i><br>
+                                <small>Performance</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

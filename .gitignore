@@ -1,0 +1,76 @@
+# ===============================
+# Arquivos binários do Visual Studio
+# ===============================
+[Bb]in/
+[Oo]bj/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+
+# ===============================
+# Configurações do Visual Studio
+# ===============================
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ===============================
+# Configurações do Rider / JetBrains
+# ===============================
+.idea/
+*.iml
+
+# ===============================
+# Arquivos de backup / temporários
+# ===============================
+*.bak
+*.tmp
+*.swp
+*.DS_Store
+nul
+
+# ===============================
+# Node / Libs Frontend
+# ===============================
+node_modules/
+wwwroot/lib/**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===============================
+# Publicações / arquivos gerados
+# ===============================
+publish/
+dist/
+*.zip
+*.tar.gz
+
+# ===============================
+# Logs e cache
+# ===============================
+*.log
+*.vspscc
+*.vssscc
+*.cache
+*.coverage
+TestResults/
+*.userprefs
+
+# ===============================
+# Arquivos do Entity Framework
+# ===============================
+Migrations/
+*.db
+*.db-journal
+*.mdf
+*.ldf
+
+# ===============================
+# Configurações de upload temporário
+# ===============================
+uploads/

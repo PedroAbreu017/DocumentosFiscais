@@ -1,0 +1,41 @@
+<!-- SystemInfo.cshtml -->
+@{
+    ViewData["Title"] = "Informações do Sistema";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 text-gray-800 mb-0">ℹ️ Informações do Sistema</h1>
+            <p class="text-muted">Detalhes técnicos e versões</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Sistema</h5>
+                            <table class="table table-sm">
+                                <tr><td><strong>Versão:</strong></td><td>1.0.0</td></tr>
+                                <tr><td><strong>Framework:</strong></td><td>.NET 8.0</td></tr>
+                                <tr><td><strong>Banco:</strong></td><td>SQL Server</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Ambiente</h5>
+                            <table class="table table-sm">
+                                <tr><td><strong>Status:</strong></td><td><span class="badge bg-success">Online</span></td></tr>
+                                <tr><td><strong>Uptime:</strong></td><td id="uptime">Calculando...</td></tr>
+                                <tr><td><strong>Memória:</strong></td><td id="memory">-</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

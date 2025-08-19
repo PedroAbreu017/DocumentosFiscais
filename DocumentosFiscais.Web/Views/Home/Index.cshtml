@@ -1,0 +1,491 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid p-0">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800 fw-bold">Dashboard</h1>
+            <p class="text-muted mb-0">Visão geral dos documentos fiscais</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Documentos/Upload" class="btn btn-primary">
+                <i class="bi bi-upload"></i> Novo Upload
+            </a>
+            <a href="/Documentos" class="btn btn-outline-secondary">
+                <i class="bi bi-list"></i> Ver Todos
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card modern-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-file-text text-primary fs-4"></i>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/Documentos">Ver Detalhes</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalDocs">0</div>
+                    <div class="stat-label">Total de Documentos</div>
+                    <div class="stat-change">
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> Todos os documentos
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card modern-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-calendar-day text-success fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="docsHoje">0</div>
+                    <div class="stat-label">Documentos Hoje</div>
+                    <div class="stat-change">
+                        <small class="text-info">
+                            <i class="bi bi-clock"></i> Últimas 24h
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card modern-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clock-history text-warning fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="pendentes">0</div>
+                    <div class="stat-label">Pendentes</div>
+                    <div class="stat-change">
+                        <small class="text-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Aguardando
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card modern-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-currency-dollar text-info fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="valorTotal">R$ 0,00</div>
+                    <div class="stat-label">Valor Total</div>
+                    <div class="stat-change">
+                        <small class="text-success">
+                            <i class="bi bi-trending-up"></i> Acumulado
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Activities -->
+    <div class="row g-4">
+        <!-- Documentos por Tipo -->
+        <div class="col-lg-8">
+            <div class="modern-card h-100">
+                <div class="card-header bg-white border-bottom-0 pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Documentos por Tipo</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                Todos os documentos
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Últimos 7 dias</a></li>
+                                <li><a class="dropdown-item" href="#">Últimos 30 dias</a></li>
+                                <li><a class="dropdown-item" href="#">Todos os documentos</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="tiposChart" class="chart-container">
+                        <div class="row" id="tiposGrafico">
+                            <div class="col-12 text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Carregando dados dos gráficos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atividade Recente -->
+        <div class="col-lg-4">
+            <div class="modern-card h-100">
+                <div class="card-header bg-white border-bottom-0 pb-0">
+                    <h5 class="card-title mb-0">Atividade Recente</h5>
+                </div>
+                <div class="card-body">
+                    <div id="atividadeRecente">
+                        <div class="d-flex align-items-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary me-3" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                            <span class="text-muted">Carregando atividades...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('🔄 Iniciando Dashboard com API REAL...');
+
+// ✅ DASHBOARD CORRIGIDO - USA API REAL
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📊 DOM carregado, carregando dados da API...');
+    carregarDadosReaisDaAPI();
+    
+    // Auto-refresh a cada 2 minutos
+    setInterval(carregarDadosReaisDaAPI, 120000);
+});
+
+async function carregarDadosReaisDaAPI() {
+    try {
+        console.log('🔄 Carregando dados da API /api/dashboard/stats...');
+        
+        const response = await fetch('/api/dashboard/stats', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Dados recebidos da API:', result);
+        
+        if (result.success && result.data) {
+            // Atualizar cards com dados reais da API
+            atualizarCardsComDadosReais(result.data);
+            
+            // Atualizar gráficos com dados reais
+            atualizarGraficosComDadosReais(result.data);
+            
+            // Atualizar atividade recente
+            atualizarAtividadeRecenteReal(result.data.recentActivity);
+            
+            console.log('✅ Dashboard atualizado com dados reais!');
+        } else {
+            throw new Error(result.message || 'Dados inválidos da API');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados da API:', error);
+        mostrarErroCarregamento();
+    }
+}
+
+function atualizarCardsComDadosReais(data) {
+    console.log('🔄 Atualizando cards com dados REAIS da API:', data);
+    
+    // Mapear dados da API para elementos
+    const elementos = {
+        'totalDocs': data.totalDocuments || 0,
+        'docsHoje': data.documentsToday || 0,
+        'pendentes': data.pendingDocuments || 0,
+        'valorTotal': formatarValor(data.totalValue || 0)
+    };
+    
+    // Atualizar cada elemento com animação
+    Object.keys(elementos).forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            const valor = elementos[id];
+            
+            // Animação de contagem para números
+            if (typeof valor === 'number') {
+                animarContagem(elemento, valor);
+            } else {
+                elemento.textContent = valor;
+            }
+            
+            console.log(`✅ ${id} atualizado para: ${valor}`);
+        } else {
+            console.warn(`⚠️ Elemento não encontrado: ${id}`);
+        }
+    });
+}
+
+function atualizarGraficosComDadosReais(data) {
+    console.log('📊 Atualizando gráficos com dados REAIS:', data.documentsByType);
+    
+    const container = document.getElementById('tiposGrafico');
+    if (!container) return;
+    
+    const tipos = data.documentsByType || [];
+    const total = tipos.reduce((sum, tipo) => sum + (tipo.quantidade || 0), 0);
+    
+    if (total === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-4">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="text-muted mt-2">Faça upload de documentos para ver os gráficos</p>
+                <a href="/Documentos/Upload" class="btn btn-primary btn-sm">
+                    <i class="bi bi-upload"></i> Fazer Upload
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="row g-3">';
+    
+    tipos.forEach(tipo => {
+        const percentual = total > 0 ? (tipo.quantidade / total * 100) : 0;
+        
+        html += `
+            <div class="col-6">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="badge" style="background-color: ${tipo.color}; width: 12px; height: 12px; border-radius: 50%;"></div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-medium">${tipo.tipo}</span>
+                            <span class="text-muted">${tipo.quantidade}</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar" style="width: ${percentual}%; background-color: ${tipo.color};"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    console.log('✅ Gráfico de tipos atualizado com dados reais');
+}
+
+function atualizarAtividadeRecenteReal(atividades) {
+    console.log('📋 Atualizando atividade recente com dados REAIS:', atividades);
+    
+    const container = document.getElementById('atividadeRecente');
+    if (!container) return;
+    
+    if (!atividades || atividades.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-clock fs-1 text-muted"></i>
+                <p class="text-muted mt-2">Nenhuma atividade recente</p>
+                <a href="/Documentos/Upload" class="btn btn-primary btn-sm">
+                    <i class="bi bi-upload"></i> Fazer Upload
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    atividades.forEach(atividade => {
+        html += `
+            <div class="d-flex align-items-start py-3 border-bottom">
+                <div class="me-3">
+                    <i class="bi ${atividade.icone}" style="color: ${atividade.cor}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-medium">${atividade.tipo}</div>
+                    <div class="text-sm text-truncate text-muted" style="max-width: 200px;" title="${atividade.nomeArquivo}">
+                        ${atividade.nomeArquivo}
+                    </div>
+                    <small class="text-muted">${atividade.tempoRelativo}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+        <div class="text-center pt-3">
+            <a href="/Documentos" class="btn btn-sm btn-outline-primary">
+                Ver Todos os Documentos
+            </a>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    console.log('✅ Atividade recente atualizada com dados reais');
+}
+
+function formatarValor(valor) {
+    if (typeof valor === 'number') {
+        return valor.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+    return valor || 'R$ 0,00';
+}
+
+function animarContagem(elemento, valorFinal) {
+    const valorAtual = parseInt(elemento.textContent.replace(/\D/g, '')) || 0;
+    const diferenca = valorFinal - valorAtual;
+    
+    if (diferenca === 0) return;
+    
+    const passos = 20;
+    const incremento = diferenca / passos;
+    let contador = 0;
+    
+    const timer = setInterval(() => {
+        contador++;
+        const novoValor = Math.round(valorAtual + (incremento * contador));
+        elemento.textContent = novoValor.toLocaleString('pt-BR');
+        
+        if (contador >= passos) {
+            clearInterval(timer);
+            elemento.textContent = valorFinal.toLocaleString('pt-BR');
+        }
+    }, 50);
+}
+
+function mostrarErroCarregamento() {
+    console.log('❌ Mostrando erro de carregamento');
+    
+    ['totalDocs', 'docsHoje', 'pendentes', 'valorTotal'].forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.textContent = 'Erro';
+            elemento.classList.add('text-danger');
+        }
+    });
+    
+    // Mostrar mensagem de erro nos gráficos
+    const container = document.getElementById('tiposGrafico');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-4">
+                <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                <p class="text-muted mt-2">Erro ao carregar dados da API</p>
+                <button onclick="carregarDadosReaisDaAPI()" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+    
+    // Mostrar erro na atividade
+    const atividadeContainer = document.getElementById('atividadeRecente');
+    if (atividadeContainer) {
+        atividadeContainer.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                <p class="text-muted mt-2">Erro ao carregar atividades</p>
+                <button onclick="carregarDadosReaisDaAPI()" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+}
+
+// ✅ FUNÇÃO DE DEBUG PARA VERIFICAR API
+window.debugDashboard = async function() {
+    console.log('🔍 Testando API do dashboard...');
+    
+    try {
+        const response = await fetch('/api/dashboard/stats');
+        const data = await response.json();
+        
+        console.log('📊 Resposta da API:');
+        console.log('  Status:', response.status);
+        console.log('  Success:', data.success);
+        console.log('  Total Documents:', data.data?.totalDocuments);
+        console.log('  Documents by Type:', data.data?.documentsByType);
+        console.log('  Recent Activity:', data.data?.recentActivity?.length, 'items');
+        
+        return data;
+    } catch (error) {
+        console.error('❌ Erro ao testar API:', error);
+        return null;
+    }
+};
+
+// Auto-debug no console
+setTimeout(() => {
+    console.log('🔍 Para debug, execute: debugDashboard()');
+}, 2000);
+</script>
+
+<style>
+.stat-card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.stat-change {
+    font-size: 0.75rem;
+}
+
+.chart-container {
+    min-height: 300px;
+}
+
+.loading {
+    opacity: 0.6;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+</style>

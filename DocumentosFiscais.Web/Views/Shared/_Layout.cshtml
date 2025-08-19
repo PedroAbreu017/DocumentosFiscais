@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Documentos Fiscais</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Site CSS -->
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    
+    <!-- Chart.js 3.9.1 - Versão compatível -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        /* === CSS INTEGRADO E LIMPO === */
+        
+        /* CSS Variables */
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #ec4899;
+            --accent-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --info-color: #3b82f6;
+            
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-light: #9ca3af;
+            --text-muted: #d1d5db;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            
+            --border-color: #e5e7eb;
+            --border-light: #f3f4f6;
+            
+            --sidebar-bg: #1f2937;
+            --sidebar-text: #d1d5db;
+            --sidebar-active: #374151;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 70px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-brand i {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .brand-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .brand-text {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            margin: 0.125rem 0;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-link.active {
+            background: var(--sidebar-active);
+            color: white;
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-link i {
+            font-size: 1.125rem;
+            flex-shrink: 0;
+            width: 20px;
+            text-align: center;
+        }
+
+        .link-text {
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar.collapsed .link-text {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Submenu Styles */
+        .sidebar-submenu {
+            position: relative;
+        }
+
+        .submenu-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed .submenu-arrow {
+            opacity: 0;
+        }
+
+        .submenu-items {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .submenu-items.show {
+            max-height: 300px;
+        }
+
+        .sidebar-sublink {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 1.25rem 0.625rem 3rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-sublink:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .sidebar-sublink i {
+            font-size: 1rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .submenu-items {
+            display: none;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 1rem 1.25rem;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--sidebar-text);
+        }
+
+        .user-avatar {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .user-details {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .user-details {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--sidebar-text);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content.sidebar-collapsed {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        .breadcrumb-nav {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .breadcrumb {
+            margin: 0;
+            background: none;
+            padding: 0;
+        }
+
+        .breadcrumb-item {
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb-item a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .page-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        /* Modern Components */
+        .modern-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .modern-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        /* Utility Classes */
+        .text-gray-800 {
+            color: var(--text-primary) !important;
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Animations */
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Mobile Responsive */
+        @@media (max-width: 767px) {
+            .sidebar {
+                left: -280px;
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .page-content {
+                padding: 1rem;
+            }
+            
+            .breadcrumb-nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .submenu-items {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <i class="bi bi-files text-primary"></i>
+                <span class="brand-text">Documentos Fiscais</span>
+            </div>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-menu">
+            <!-- Dashboard -->
+            <a href="/" class="sidebar-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                <i class="bi bi-speedometer2"></i>
+                <span class="link-text">Dashboard</span>
+            </a>
+            
+            <!-- Documentos -->
+            <a href="/Documentos" class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Documentos" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="bi bi-file-text"></i>
+                <span class="link-text">Documentos</span>
+            </a>
+            
+            <!-- Upload -->
+            <a href="/Documentos/Upload" class="sidebar-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Upload" ? "active" : "")">
+                <i class="bi bi-cloud-upload"></i>
+                <span class="link-text">Upload</span>
+            </a>
+            
+            <div class="sidebar-divider"></div>
+            
+            <!-- Relatórios - SEM ONCLICK -->
+            <div class="sidebar-submenu">
+                <a href="/Reports" class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")">
+                    <i class="bi bi-graph-up"></i>
+                    <span class="link-text">Relatórios</span>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="submenu-items">
+                    <a href="/Reports" class="sidebar-sublink">
+                        <i class="bi bi-bar-chart"></i>
+                        <span class="link-text">Visão Geral</span>
+                    </a>
+                    <a href="/Reports/DocumentsByPeriod" class="sidebar-sublink">
+                        <i class="bi bi-calendar-range"></i>
+                        <span class="link-text">Por Período</span>
+                    </a>
+                    <a href="/Reports/Performance" class="sidebar-sublink">
+                        <i class="bi bi-speedometer"></i>
+                        <span class="link-text">Performance</span>
+                    </a>
+                    <a href="/Reports/ExportToCsv" class="sidebar-sublink">
+                        <i class="bi bi-download"></i>
+                        <span class="link-text">Exportar CSV</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Configurações - SEM ONCLICK -->
+            <div class="sidebar-submenu">
+                <a href="/Settings" class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "")">
+                    <i class="bi bi-gear"></i>
+                    <span class="link-text">Configurações</span>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="submenu-items">
+                    <a href="/Settings" class="sidebar-sublink">
+                        <i class="bi bi-sliders"></i>
+                        <span class="link-text">Geral</span>
+                    </a>
+                    <a href="/Settings/Upload" class="sidebar-sublink">
+                        <i class="bi bi-cloud-upload"></i>
+                        <span class="link-text">Upload</span>
+                    </a>
+                    <a href="/Settings/Security" class="sidebar-sublink">
+                        <i class="bi bi-shield-check"></i>
+                        <span class="link-text">Segurança</span>
+                    </a>
+                    <a href="/Settings/Database" class="sidebar-sublink">
+                        <i class="bi bi-database"></i>
+                        <span class="link-text">Banco de Dados</span>
+                    </a>
+                    <a href="/Settings/Logs" class="sidebar-sublink">
+                        <i class="bi bi-journal-text"></i>
+                        <span class="link-text">Logs</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <!-- Ajuda - SEM ONCLICK -->
+            <div class="sidebar-submenu">
+                <a href="/Help" class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Help" ? "active" : "")">
+                    <i class="bi bi-question-circle"></i>
+                    <span class="link-text">Ajuda</span>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="submenu-items">
+                    <a href="/Help" class="sidebar-sublink">
+                        <i class="bi bi-house"></i>
+                        <span class="link-text">Central de Ajuda</span>
+                    </a>
+                    <a href="/Help/FAQ" class="sidebar-sublink">
+                        <i class="bi bi-patch-question"></i>
+                        <span class="link-text">FAQ</span>
+                    </a>
+                    <a href="/Help/Documentation" class="sidebar-sublink">
+                        <i class="bi bi-book"></i>
+                        <span class="link-text">Documentação</span>
+                    </a>
+                    <a href="/Help/Contact" class="sidebar-sublink">
+                        <i class="bi bi-envelope"></i>
+                        <span class="link-text">Contato</span>
+                    </a>
+                    <a href="/Help/SystemInfo" class="sidebar-sublink">
+                        <i class="bi bi-info-circle"></i>
+                        <span class="link-text">Info do Sistema</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name">Pedro Marsch</div>
+                    <div class="user-role">Desenvolvedor</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-nav">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/"><i class="bi bi-house"></i> Início</a>
+                </li>
+                @if (ViewContext.RouteData.Values["controller"]?.ToString() != "Home")
+                {
+                    <li class="breadcrumb-item">
+                        <a href="/@ViewContext.RouteData.Values["controller"]">@ViewContext.RouteData.Values["controller"]</a>
+                    </li>
+                }
+                @if (ViewContext.RouteData.Values["action"]?.ToString() != "Index")
+                {
+                    <li class="breadcrumb-item active">
+                        @ViewContext.RouteData.Values["action"]
+                    </li>
+                }
+            </ol>
+        </nav>
+        
+        <!-- Page Content -->
+        <div class="page-content">
+            @RenderBody()
+        </div>
+    </main>
+
+    <!-- Scripts Essenciais -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+     // === APENAS TOGGLE SIDEBAR - SEM INTERFERIR NA NAVEGAÇÃO ===
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    
+    sidebar.classList.toggle('collapsed');
+    mainContent.classList.toggle('sidebar-collapsed');
+    
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+}
+
+// Restaurar estado quando carrega a página
+document.addEventListener('DOMContentLoaded', function() {
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    
+    if (isCollapsed) {
+        document.getElementById('sidebar').classList.add('collapsed');
+        document.getElementById('mainContent').classList.add('sidebar-collapsed');
+    }
+});
+
+// Mobile
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('show');
+    document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+}
+    </script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Dados Reais</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .success { background-color: #d4edda; border-left: 4px solid #28a745; }
+        .error { background-color: #f8d7da; border-left: 4px solid #dc3545; }
+        .info { background-color: #d1ecf1; border-left: 4px solid #17a2b8; }
+        .test-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .test-btn:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .metric { display: inline-block; margin: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; min-width: 150px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Verificação de Dados Reais - Sistema Documentos Fiscais</h1>
+    
+    <div class="test-section">
+        <h2>📊 Teste 1: Verificar se DocumentsByPeriod usa dados reais</h2>
+        <button class="test-btn" onclick="testDocumentsByPeriod()">Testar Documentos por Período</button>
+        <div id="documentsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>⚡ Teste 2: Verificar se Performance usa dados reais</h2>
+        <button class="test-btn" onclick="testPerformanceData()">Testar Performance</button>
+        <div id="performanceResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔄 Teste 3: Verificar mudanças em tempo real</h2>
+        <button class="test-btn" onclick="startRealTimeTest()">Iniciar Teste Tempo Real</button>
+        <button class="test-btn" onclick="stopRealTimeTest()">Parar Teste</button>
+        <div id="realTimeResult"></div>
+        <div id="realTimeMetrics"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📥 Teste 4: Upload de Documento Teste</h2>
+        <input type="file" id="testFile" accept=".xml">
+        <button class="test-btn" onclick="uploadTestDocument()">Upload Documento Teste</button>
+        <div id="uploadResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 Teste 5: Comparar dados antes/depois</h2>
+        <button class="test-btn" onclick="captureBaseline()">Capturar Baseline</button>
+        <button class="test-btn" onclick="compareWithBaseline()">Comparar com Baseline</button>
+        <div id="comparisonResult"></div>
+    </div>
+
+    <script>
+        let realTimeInterval;
+        let baseline = null;
+
+        // Teste 1: Verificar se os dados de documentos são reais
+        async function testDocumentsByPeriod() {
+            const result = document.getElementById('documentsResult');
+            result.innerHTML = '<div class="info">🔄 Testando dados de documentos...</div>';
+            
+            try {
+                // Fazer múltiplas requisições para verificar consistência
+                const responses = await Promise.all([
+                    fetch('/api/reports/documents-by-period'),
+                    fetch('/api/reports/documents-by-period'),
+                    fetch('/api/reports/documents-by-period')
+                ]);
+                
+                const data = await Promise.all(responses.map(r => r.json()));
+                
+                let html = '<h3>Resultados:</h3>';
+                
+                // Verificar se os dados são consistentes (dados reais devem ser iguais)
+                const totals = data.map(d => d.data?.stats?.total || 0);
+                const isConsistent = totals.every(t => t === totals[0]);
+                
+                if (isConsistent) {
+                    html += '<div class="success">✅ Dados são consistentes entre requisições (indicativo de dados reais)</div>';
+                } else {
+                    html += '<div class="error">❌ Dados variam entre requisições (podem ser mockados com random)</div>';
+                }
+                
+                // Mostrar estatísticas
+                const stats = data[0].data?.stats;
+                if (stats) {
+                    html += `
+                        <div class="metric">Total: ${stats.total}</div>
+                        <div class="metric">Sucesso: ${stats.successful}</div>
+                        <div class="metric">Pendente: ${stats.pending}</div>
+                        <div class="metric">Erro: ${stats.error}</div>
+                    `;
+                    
+                    // Verificar se há documentos reais
+                    if (stats.total > 0) {
+                        html += '<div class="success">✅ Há documentos no banco de dados</div>';
+                    } else {
+                        html += '<div class="info">ℹ️ Banco vazio - adicione documentos para testar dados reais</div>';
+                    }
+                }
+                
+                // Verificar timeline
+                const timeline = data[0].data?.charts?.timeline;
+                if (timeline && timeline.data) {
+                    const hasVariation = timeline.data.some(v => v > 0);
+                    if (hasVariation) {
+                        html += '<div class="success">✅ Timeline tem variação (dados reais)</div>';
+                    } else {
+                        html += '<div class="info">ℹ️ Timeline sem dados (banco vazio)</div>';
+                    }
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+            }
+        }
+
+        // Teste 2: Verificar se dados de performance são reais
+        async function testPerformanceData() {
+            const result = document.getElementById('performanceResult');
+            result.innerHTML = '<div class="info">🔄 Testando dados de performance...</div>';
+            
+            try {
+                const response = await fetch('/api/reports/performance');
+                const data = await response.json();
+                
+                let html = '<h3>Métricas de Performance:</h3>';
+                
+                const system = data.data?.system;
+                if (system) {
+                    // Verificar se uptime muda (dados reais mudam com tempo)
+                    html += `
+                        <div class="metric">Uptime: ${system.uptime}</div>
+                        <div class="metric">CPU: ${system.cpu?.usage}%</div>
+                        <div class="metric">Memória: ${system.memory?.used}GB / ${system.memory?.total}GB</div>
+                        <div class="metric">Disco: ${system.disk?.used}GB / ${system.disk?.total}GB</div>
+                    `;
+                    
+                    // Verificar se memória é realista
+                    const memoryUsed = system.memory?.used || 0;
+                    if (memoryUsed > 0 && memoryUsed < 50) {
+                        html += '<div class="success">✅ Uso de memória realístico (dados reais)</div>';
+                    } else {
+                        html += '<div class="error">❌ Uso de memória pode ser mockado</div>';
+                    }
+                    
+                    // Verificar GC Collections (deve ser > 0 em sistema real)
+                    const gcCollections = system.memory?.gcCollections || 0;
+                    if (gcCollections > 0) {
+                        html += `<div class="success">✅ GC Collections: ${gcCollections} (dados reais do .NET)</div>`;
+                    } else {
+                        html += '<div class="error">❌ GC Collections zerado (pode ser mock)</div>';
+                    }
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+            }
+        }
+
+        // Teste 3: Monitoramento em tempo real
+        function startRealTimeTest() {
+            const result = document.getElementById('realTimeResult');
+            const metrics = document.getElementById('realTimeMetrics');
+            
+            result.innerHTML = '<div class="info">🔄 Iniciando monitoramento em tempo real...</div>';
+            
+            let counter = 0;
+            realTimeInterval = setInterval(async () => {
+                counter++;
+                try {
+                    const [docsResponse, perfResponse] = await Promise.all([
+                        fetch('/api/reports/documents-by-period'),
+                        fetch('/api/reports/performance')
+                    ]);
+                    
+                    const docsData = await docsResponse.json();
+                    const perfData = await perfResponse.json();
+                    
+                    const timestamp = new Date().toLocaleTimeString();
+                    const totalDocs = docsData.data?.stats?.total || 0;
+                    const cpuUsage = perfData.data?.system?.cpu?.usage || 0;
+                    const memoryUsed = perfData.data?.system?.memory?.used || 0;
+                    
+                    metrics.innerHTML = `
+                        <h4>Medição #${counter} - ${timestamp}</h4>
+                        <div class="metric">Docs: ${totalDocs}</div>
+                        <div class="metric">CPU: ${cpuUsage}%</div>
+                        <div class="metric">RAM: ${memoryUsed}GB</div>
+                    `;
+                    
+                    if (counter === 1) {
+                        result.innerHTML = '<div class="success">✅ Monitoramento ativo - observe se valores mudam</div>';
+                    }
+                    
+                } catch (error) {
+                    result.innerHTML = `<div class="error">❌ Erro no monitoramento: ${error.message}</div>`;
+                }
+            }, 2000); // A cada 2 segundos
+        }
+
+        function stopRealTimeTest() {
+            if (realTimeInterval) {
+                clearInterval(realTimeInterval);
+                document.getElementById('realTimeResult').innerHTML = '<div class="info">⏹️ Monitoramento parado</div>';
+            }
+        }
+
+        // Teste 4: Upload de documento
+        async function uploadTestDocument() {
+            const result = document.getElementById('uploadResult');
+            const fileInput = document.getElementById('testFile');
+            
+            if (!fileInput.files[0]) {
+                result.innerHTML = '<div class="error">❌ Selecione um arquivo XML primeiro</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">🔄 Fazendo upload...</div>';
+            
+            try {
+                // Capturar estado antes
+                const beforeResponse = await fetch('/api/reports/documents-by-period');
+                const beforeData = await beforeResponse.json();
+                const beforeTotal = beforeData.data?.stats?.total || 0;
+                
+                // Fazer upload
+                const formData = new FormData();
+                formData.append('files', fileInput.files[0]);
+                
+                const uploadResponse = await fetch('/Documentos/Upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Aguardar um pouco para processar
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Capturar estado depois
+                const afterResponse = await fetch('/api/reports/documents-by-period');
+                const afterData = await afterResponse.json();
+                const afterTotal = afterData.data?.stats?.total || 0;
+                
+                let html = `<h4>Resultado do Upload:</h4>`;
+                html += `<div class="metric">Antes: ${beforeTotal} docs</div>`;
+                html += `<div class="metric">Depois: ${afterTotal} docs</div>`;
+                
+                if (afterTotal > beforeTotal) {
+                    html += '<div class="success">✅ Dados REAIS confirmados! Documento adicionado ao banco</div>';
+                } else {
+                    html += '<div class="error">❌ Dados podem ser mockados (não houve alteração)</div>';
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Erro no upload: ${error.message}</div>`;
+            }
+        }
+
+        // Teste 5: Comparação baseline
+        async function captureBaseline() {
+            try {
+                const response = await fetch('/api/reports/documents-by-period');
+                baseline = await response.json();
+                
+                document.getElementById('comparisonResult').innerHTML = 
+                    `<div class="success">✅ Baseline capturado: ${baseline.data?.stats?.total || 0} documentos</div>`;
+            } catch (error) {
+                document.getElementById('comparisonResult').innerHTML = 
+                    `<div class="error">❌ Erro ao capturar baseline: ${error.message}</div>`;
+            }
+        }
+
+        async function compareWithBaseline() {
+            if (!baseline) {
+                document.getElementById('comparisonResult').innerHTML = 
+                    '<div class="error">❌ Capture o baseline primeiro</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/reports/documents-by-period');
+                const current = await response.json();
+                
+                const baselineTotal = baseline.data?.stats?.total || 0;
+                const currentTotal = current.data?.stats?.total || 0;
+                const difference = currentTotal - baselineTotal;
+                
+                let html = '<h4>Comparação com Baseline:</h4>';
+                html += `<div class="metric">Baseline: ${baselineTotal}</div>`;
+                html += `<div class="metric">Atual: ${currentTotal}</div>`;
+                html += `<div class="metric">Diferença: ${difference}</div>`;
+                
+                if (difference !== 0) {
+                    html += '<div class="success">✅ DADOS REAIS confirmados! Houve mudança nos dados</div>';
+                } else {
+                    html += '<div class="info">ℹ️ Sem mudanças (normal se não houve upload)</div>';
+                }
+                
+                document.getElementById('comparisonResult').innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('comparisonResult').innerHTML = 
+                    `<div class="error">❌ Erro na comparação: ${error.message}</div>`;
+            }
+        }
+
+        // Criar arquivo XML de teste
+        function createTestXML() {
+            const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe Id="NFe35200714200166000187550010000000047123456789">
+        <ide>
+            <cUF>35</cUF>
+            <cNF>12345678</cNF>
+            <natOp>Venda</natOp>
+            <mod>55</mod>
+            <serie>1</serie>
+            <nNF>47</nNF>
+            <dhEmi>2024-08-19T10:00:00-03:00</dhEmi>
+            <tpNF>1</tpNF>
+            <idDest>1</idDest>
+            <cMunFG>3550308</cMunFG>
+            <tpImp>1</tpImp>
+            <tpEmis>1</tpEmis>
+            <cDV>9</cDV>
+            <tpAmb>2</tpAmb>
+            <finNFe>1</finNFe>
+            <indFinal>1</indFinal>
+            <indPres>1</indPres>
+        </ide>
+        <emit>
+            <CNPJ>14200166000187</CNPJ>
+            <xNome>Empresa Teste Ltda</xNome>
+            <xFant>Teste</xFant>
+            <enderEmit>
+                <xLgr>Rua Teste</xLgr>
+                <nro>123</nro>
+                <xBairro>Centro</xBairro>
+                <cMun>3550308</cMun>
+                <xMun>São Paulo</xMun>
+                <UF>SP</UF>
+                <CEP>01000000</CEP>
+                <cPais>1058</cPais>
+                <xPais>Brasil</xPais>
+            </enderEmit>
+            <IE>123456789012</IE>
+            <CRT>3</CRT>
+        </emit>
+        <total>
+            <ICMSTot>
+                <vBC>100.00</vBC>
+                <vICMS>18.00</vICMS>
+                <vICMSDeson>0.00</vICMSDeson>
+                <vFCP>0.00</vFCP>
+                <vBCST>0.00</vBCST>
+                <vST>0.00</vST>
+                <vFCPST>0.00</vFCPST>
+                <vFCPSTRet>0.00</vFCPSTRet>
+                <vProd>100.00</vProd>
+                <vFrete>0.00</vFrete>
+                <vSeg>0.00</vSeg>
+                <vDesc>0.00</vDesc>
+                <vII>0.00</vII>
+                <vIPI>0.00</vIPI>
+                <vIPIDevol>0.00</vIPIDevol>
+                <vPIS>0.65</vPIS>
+                <vCOFINS>3.00</vCOFINS>
+                <vOutro>0.00</vOutro>
+                <vNF>118.00</vNF>
+            </ICMSTot>
+        </total>
+    </infNFe>
+</NFe>`;
+            
+            const blob = new Blob([xmlContent], { type: 'application/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'teste_nfe.xml';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Adicionar botão para criar XML de teste
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadSection = document.querySelector('#uploadResult').parentElement;
+            const createButton = document.createElement('button');
+            createButton.className = 'test-btn';
+            createButton.textContent = 'Criar XML de Teste';
+            createButton.onclick = createTestXML;
+            uploadSection.insertBefore(createButton, document.getElementById('testFile'));
+        });
+    </script>
+</body>
+</html>
