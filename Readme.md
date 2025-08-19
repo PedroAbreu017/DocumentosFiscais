@@ -13,8 +13,11 @@
 ![Dashboard Principal](docs/screenshots/dashboard-desktop.png)
 *Dashboard principal com estatísticas em tempo real e tema claro*
 
-![Dashboard Dark Mode](docs/screenshots/dashboard-dark.png)
-*Interface com tema escuro e design moderno*
+![Documentos](docs/screenshots/documentos.png)
+*Página de Documentos*
+
+![Upload](docs/screenshots/upload.png)
+*Página de Upload*
 
 ### 📱 Interface Mobile
 <div align="center">
